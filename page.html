@@ -1,0 +1,160 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="stt.js"></script>
+    <link rel="stylesheet" href="jquery-ui-1.11.4.custom/jquery-ui.theme.css">
+    <style>
+      html {
+        font-family: "Helvetica" "Ariel" sans-serif;
+      }
+      body {
+        width: 50em;
+        margin: auto;
+      }
+      h3 {
+        margin: 0;
+        margin-bottom: 0.2em;
+        font-size: 1em;
+        font-weight: normal;
+        text-align: center;
+      }
+      ul {
+        padding-left: 0;
+      }
+      ul li {
+        list-style-type: none;
+      }
+      th {
+        font-weight: normal;
+      }
+      td {
+        text-align: center;
+        font-family: "Helvetica" "Ariel" sans-serif;
+      }
+      input[type="text"] {
+        width: 8em;
+      }
+      input[type="button"] {
+        padding: 0.1em;
+        padding-left: 0.2em;
+        padding-right: 0.2em;
+        border: 0.1px solid #aaa;
+        border-radius: 0.1em;
+        background-color: #eee;
+        margin-right: 0.2em;
+      }
+      input[type="button"]:hover {
+        background-color: #ccc;
+      }
+      input[maxlength="1"] {
+        width: 1em;
+      }
+      .error {
+        font-family: "Courier" monospace;
+        font-smooth: never;
+        -webkit-font-smoothing : none;
+      }
+      .side-scroll {
+        overflow: auto;
+      }
+      .side-scroll:hover {
+        overflow-x: auto;
+      }
+      .stlist th {
+        border: 0.5px solid #eee;
+        border-radius: 1em;
+        cursor: pointer;
+      }
+      .stlist th:hover {
+        background-color: #ccc;
+      }
+      .ins {
+        float: left;
+        width: 18em;
+        margin-right: 21.85em;
+      }
+      .ins li {
+        text-align: center;
+        margin-bottom: .5em;
+      }
+      .drops td {
+        width: 1em;
+      }
+      .dropdown {
+        display: none;
+        border: 1px solid #aaa;
+        text-align: right;
+        padding: 0.2em;
+      }
+      .dropdown ul {
+        margin: 0;
+      }
+      .reason {
+        font-size: 0.5em;
+      }
+      #truth-table {
+        width: 45em;
+        margin: auto;
+        text-align: center;
+      }
+      #get-code {
+        display:none;
+        border-style:inset;
+      }
+      #set-code {
+        display:none;
+        border-style:inset;
+      }
+      #err-msg {
+        padding: 1em;
+      }
+      #symbols {
+        display: block;
+        float: left;
+        width: 8em;
+        padding: 1em;
+        border: 1px solid #aaa;
+        background-color: #bbb;
+      }
+      #symbols li {
+        text-align: right;
+      }
+      #symbols li input {
+        width: 7em;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <ul class="ins">
+      <li>
+        <input id="adds" type="button" value="+"/>
+        <input id="dels" type="button" value="&ndash;"/>
+        <input id="subs" type="button" value="Submit"/>
+      </li>
+      <li><input class="s" type="text" name="statement0"/></li>
+    </ul>
+      <!--div id="context">
+        <div>
+          <input id="showc" type="button" value="Load Table"/>
+          <input id="getc" type="button" value="Get Table Data"/>
+        </div>
+        <div id="get-code"></div>
+        <div id="set-code"></div>
+        </ul>
+      </div-->
+    </div>
+    <ul id="symbols">
+      <li><h3>Input Symbols</h3></li>
+    </ul>
+    <div id="err-msg"></div>
+    <div id="truth-table" class="side-scroll">
+      <table class="tt">
+        <tr class="stlist"></tr>
+        <tr class="v0"></tr>
+      </table>
+    </div>
+  </body>
+</html>
