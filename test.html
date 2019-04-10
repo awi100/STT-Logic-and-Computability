@@ -12,6 +12,48 @@
   //   return i;
   // }
 
+  function isLiteral(express){
+    return express.e1.length == 1 && express.e1 != '~' && express.e2 == null;
+  }
+
+  function reit(express1, express2){
+    if (express1 == null || express2 == null)
+      return true;
+    var e1isLit = isLiteral(express1), e2isLit = isLiteral(express2);
+    if (!e1isLit && !e2isLit){
+      return reit(express1.e1, express2) && reit(express1.e2, express2) && reit(express1, express2.e1) && reit(express1, express2.e2);
+    }
+    else if (!e1isLit){
+      return reit(express1.e1, express2) && reit(express1.e2, express2);
+    }
+    else if (!e2isLit){
+      return reit(express1, express2.e1) && reit(express1, express2.e2);
+    }
+    var sameLit = express1.e1 == express2.e1;
+    if (sameLit && express1.value != express2.value)
+      return false;
+    else
+      return true;
+}
+
+  function checkReit(){
+    var first = {e1: "A", e2: null, value: true, oper: null, depth: 0};
+    var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+                  e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
+                  value: null, oper: "^", depth: 0};
+    var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+                  e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
+                  value: null, oper: "^", depth: 0};
+    var fourth = {e1: "D", e2: null, value: true, oper: null, depth: 0};
+    var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1}, e2: null, value: true, oper: "~", depth: 0}
+    console.log(reit(first, second));
+    console.log(reit(first, third));
+    console.log(reit(second, third));
+    console.log(reit(first, fourth));
+    console.log(reit(first, fifth));
+
+  }
+
   //function to check if there are parens around the 
   //expression that are serving no purpose
   function checkUselessParens(text){
@@ -78,19 +120,27 @@
       text = text.substring(1, text.length);
     if (text.charAt(text.length-1) == ' ') 
       text = text.substring(0, text.length-1);
-    if (validateInput(text) != ""){
-      console.log(validateInput(text));
-      return "error";
+    var errMsg = validateInput(text);
+    if (errMsg != ""){
+      document.getElementById('myText').value = errMsg;  
+      return;
     }
     var express;
     //get rid of outer brackets if not needed
     while (checkUselessParens(text)){
-      console.log("here");
       text = text.substring(1, text.length-1);
     }
     //return literal (base case)
     if (text.length == 1){
       express = {e1: text, e2: null, value: null, oper: null, depth: counter};
+      console.log(express);
+      return express;
+    }
+    if (text.length == 2){
+      var neg = text.charAt(0);
+      var lit = text.charAt(1);
+      var myLit = {e1: lit, e2: null, value: null, oper: null, depth: counter+1};
+      express = {e1: myLit, e2: null, value: null, oper: neg, depth: counter};
       console.log(express);
       return express;
     }
@@ -116,7 +166,6 @@
         express = {e1: createObject(left, counter+1), e2: createObject(right, counter+1), value: null, oper: char, depth: counter};
         console.log(express);
         return express;
-
      }
     }
 	}    	
@@ -132,6 +181,8 @@
   <p>(a | b) ^ c ^ (d | e)</p>
 
 	<button onclick="createObject(document.getElementById('myText').value, 0)">Submit</button>
+
+  <button onclick="checkReit()">TestReit</button>
   </body>
 </html>
 
