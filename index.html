@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>DiscoDash</title>
+    <meta charset='UTF-8'>
+    <title>Short Truth Tables</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript" src="https://code.angularjs.org/1.7.7/angular.js"></script>
     <script type="text/javascript" src="app.js"></script>
   </head>
-  <body ng-app="multiSearch" ng-controller="MainCtrl">
+  <body ng-app="shortTruthTables" ng-controller="MainCtrl">
+    <aside>
+      <h1>Short Truth Tables</h1>
+      <a href="manual.html"><button class="btn">Manual</button></a>
+      <button class="btn">Export Save</button>
+      <button class="btn">Import File</button>
+      <p class="detail">BramHub 2019: Andrew Imrie, Maya Tung</p>
+    </aside>
+    <main>
+      <div class="switch-container">
+        <button class="switch" ng-click="inputMode = true;" ng-class="{'active': inputMode}">Input</button>
+        <button class="switch" ng-click="inputMode = false;" ng-class="{'active': !inputMode}">Table</button>
+      </div>
+      <section ng-if="inputMode">
+        <div ng-repeat="input in inputs" class="inputs">
+          <input
+            id="{{'input-' + input.id}}"
+            class="inline"
+            type="text"
+            placeholder="New expression"
+            value=""
+            ng-model="input.str"
+            ng-keypress="enterInput($event)"
+            ng-change="validateInput(input)"
+            ng-class="{'invalid': input.err}"
+            onfocus="verifyChange()"
+          />
+          <div class="btn inline" ng-click="deleteInput(input)">✖</div>
+          <!-- <p class="err" ng-if="input.err">{{input.err}}</p> -->
+        </div>
+        <button class="btn" ng-click="addInput()">Add New</button>
+      </section>
+      <section ng-if="!inputMode">
+        <span ng-repeat="expression in expressions">
+          <span ng-repeat="obj in expression" ng-click="edit($event)">
+            {{obj}}
+          </span>
+        </span>
+      </section>
+    </main>
   </body>
 </html>
