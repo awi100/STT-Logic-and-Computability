@@ -2,7 +2,136 @@
 <html>
   <body>
     <script>
-      console.log({e1: 'A', e2: null, value: true, oper: null, depth: 0});
+
+  // function findNextOperator(text){
+  //   var i;
+  //   for(i = 0; i < text.length; i++)
+  //     var char = text.charAt(i);
+  //     if (char == '|' || char == '^')
+  //       break;
+  //   return i;
+  // }
+
+  //function to check if there are parens around the 
+  //expression that are serving no purpose
+  function checkUselessParens(text){
+    if (text.charAt(0) != '(' || text.charAt(text.length-1) != ')')
+      return false;
+    var level = 0, i = 0, useless = true, char;
+    //if the level is 0 somewhere inside the expression before  
+    //the last closing paren then the parens are not useles
+    for (i = 0; i < text.length-1; i++){
+      char = text.charAt(i);
+      if (char == '(')
+        level++;
+      if (char == ')')
+        level--;
+      if (level == 0)
+        useless = false;
+    }
+    return useless;
+  }
+
+  function isOperator(char){
+    return char == '|' || char == '^';
+  }
+
+  function validateInput(text){
+    var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false;
+    for (i = 0; i < text.length; i++){
+      var char = text.charAt(i);
+      var charCode = text.charCodeAt(i);
+      if (char == '('){
+        containsParens = true;
+        level++;
+      }
+      if (char == ')'){
+        containsParens = true;
+        level--;
+      }
+      if (numOfZeroDepths == 1 && isOperator(char) && level == 0) anotherOperatorAppeared = true;
+      //check that you're at level 0 again after another operator appeared
+      if (numOfZeroDepths > 0 && anotherOperatorAppeared && level == 0)
+        numOfZeroDepths++;
+      //else if you're at level 0 for the first time
+      else if (level == 0 && numOfZeroDepths == 0 && isOperator(char))
+        numOfZeroDepths++;
+      //check for another operator appearing on level 0
+      
+      //check for literals longer than 1 char
+      if(i > 0 && charCode > 64 && charCode < 91 && (text.charCodeAt(i-1) > 64 && text.charCodeAt(i-1) < 91))
+        return "Literals must be length 1";
+    }
+    //cannot have two operators at the top level
+    if (numOfZeroDepths > 1 && containsParens) return "Only 1 main operator allowed.";
+    //cannot have a different # of left than right parens
+    if (level != 0) return "Uneven number of open and closed parens.";
+
+    return "";
+  }
+
+	function createObject(text, counter){
+    //for consistency
+    text = text.toUpperCase()
+    //clean text of spaces
+    if (text.charAt(0) == ' ') 
+      text = text.substring(1, text.length);
+    if (text.charAt(text.length-1) == ' ') 
+      text = text.substring(0, text.length-1);
+    if (validateInput(text) != ""){
+      console.log(validateInput(text));
+      return "error";
+    }
+    var express;
+    //get rid of outer brackets if not needed
+    while (checkUselessParens(text)){
+      console.log("here");
+      text = text.substring(1, text.length-1);
+    }
+    //return literal (base case)
+    if (text.length == 1){
+      express = {e1: text, e2: null, value: null, oper: null, depth: counter};
+      console.log(express);
+      return express;
+    }
+    //calculate the max depth level
+    var i, maxLevelTracker = 1, maxLevel = 0;
+    for(i = 0; i < text.length; i++){
+      var char = text.charAt(i);
+      if (char == '(') maxLevelTracker++;
+      if (char == ')') maxLevelTracker--;
+      if (maxLevelTracker > maxLevel) maxLevel = maxLevelTracker;
+    }
+    //find the 0 level operator and recurse
+    var level = 0;
+    for (i = 0; i < text.length; i++){
+      var char = text.charAt(i);
+      if (char == '(')
+        level++;
+      if (char == ')')
+        level--;
+      if (isOperator(char) && level == 0){
+        var left = text.substring(0, i);
+        var right = text.substring(i+1, text.length);
+        express = {e1: createObject(left, counter+1), e2: createObject(right, counter+1), value: null, oper: char, depth: counter};
+        console.log(express);
+        return express;
+
+     }
+    }
+	}    	
     </script>
+
+    Input: <input type="text" id="myText" value="">
+
+	<p>Input string expressions</p>
+
+  <p>((a | b) ^ c)</p>
+  <p>(a ^ b) | (c ^ d)</p>
+  <p>(((A | B) ^ C) | D) > E</p>
+  <p>(a | b) ^ c ^ (d | e)</p>
+
+	<button onclick="createObject(document.getElementById('myText').value, 0)">Submit</button>
   </body>
 </html>
+
