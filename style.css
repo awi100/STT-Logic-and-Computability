@@ -1,5 +1,5 @@
 body {
-  font-family: "Trebuchet MS", sans-serif;
+  font-family: "Tahoma", sans-serif;
   margin: 0;
   display: flex;
   font-size: 2vh;
@@ -40,6 +40,7 @@ a {
 
 .inputs {
   display: flex;
+  flex-wrap: wrap;
   margin: 0 0 3vh 0;
 }
 
@@ -48,8 +49,8 @@ input {
   background-color: #EEE;
   border-width: 0px;
   font-size: 1em;
-  font-family: "Trebuchet MS", sans-serif;
-  width: 100%;
+  font-family: "Tahoma", sans-serif;
+  flex: 1 0 90%;
 
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -62,6 +63,10 @@ input.invalid {
 
 .inputs .err {
   color: #CC2828;
+}
+
+.btn .input {
+  flex: 1 0 10%;
 }
 
 .btn {
@@ -106,6 +111,15 @@ aside .btn {
   color: #FFF !important;
 }
 
+.switch.switch-middle {
+  border-left: 0px;
+  border-right: 0px;
+}
+
+.edit .switch-container {
+  margin: 0 0 1vh 0;
+}
+
 .detail {
   color: #333;
   text-transform: uppercase;
@@ -113,4 +127,36 @@ aside .btn {
   font-size: 0.7em;
   position: absolute;
   bottom: 0;
+}
+
+.table {
+  display: table;
+}
+
+.trow {
+  display: table-row;
+}
+
+.tcell {
+  display: table-cell;
+  padding: 1vh;
+  text-align: center;
+}
+
+.obj:hover {
+  background-color: #DDD;
+}
+
+.rule {
+  border: 1px solid black;
+}
+
+.rule.invalid {
+  border-color: red;
+}
+
+select {
+  padding: 1vh;
+  font-size: 1em;
+  font-family: "Tahoma", sans-serif;
 }

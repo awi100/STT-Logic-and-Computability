@@ -5,14 +5,15 @@
     <title>Short Truth Tables</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript" src="https://code.angularjs.org/1.7.7/angular.js"></script>
+    <script type="text/javascript" src="logic.js"></script>
     <script type="text/javascript" src="app.js"></script>
   </head>
   <body ng-app="shortTruthTables" ng-controller="MainCtrl">
     <aside>
       <h1>Short Truth Tables</h1>
       <a href="manual.html"><button class="btn">Manual</button></a>
-      <button class="btn">Export Save</button>
-      <button class="btn">Import File</button>
+      <button class="btn" ng-click="export()">Export Save</button>
+      <button class="btn" ng-click="import()">Import File</button>
       <p class="detail">BramHub 2019: Andrew Imrie, Maya Tung</p>
     </aside>
     <main>
@@ -24,7 +25,7 @@
         <div ng-repeat="input in inputs" class="inputs">
           <input
             id="{{'input-' + input.id}}"
-            class="inline"
+            class="input"
             type="text"
             placeholder="New expression"
             value=""
@@ -34,17 +35,42 @@
             ng-class="{'invalid': input.err}"
             onfocus="verifyChange()"
           />
-          <div class="btn inline" ng-click="deleteInput(input)">✖</div>
-          <!-- <p class="err" ng-if="input.err">{{input.err}}</p> -->
+          <div class="btn input" ng-click="deleteInput(input)">✖</div>
+          <p class="err input" ng-if="input.err">{{input.err}}</p>
         </div>
         <button class="btn" ng-click="addInput()">Add New</button>
       </section>
-      <section ng-if="!inputMode">
-        <span ng-repeat="expression in expressions">
-          <span ng-repeat="obj in expression" ng-click="edit($event)">
-            {{obj}}
-          </span>
-        </span>
+      <section class="table" ng-if="!inputMode">
+        <div ng-repeat="expression in expressions">
+          <div class="trow expression">
+            <div class="tcell obj" ng-repeat="obj in expression.obj" ng-click="connect(obj)">
+              {{obj.str}}
+            </div>
+          </div>
+          <div class="trow">
+            <div class="tcell" ng-repeat="obj in expression.obj">
+              {{obj.val}}<sub>{{obj.num}}</sub>
+            </div>
+          </div>
+          <div class="trow edit" ng-if="editing">
+            <div class="tcell" ng-repeat="obj in expression.obj">
+              <div class="switch-container" ng-show="obj.edit">
+                <div class="switch" ng-click="setObjVal(obj, 'T')" ng-class="{'active': obj.exp.value == true}">T</div>
+                <div class="switch switch-middle" ng-click="setObjVal(obj, '')" ng-class="{'active': obj.exp.value == null}"></div>
+                <div class="switch" ng-click="setObjVal(obj, 'F')" ng-class="{'active': obj.exp.value == false}">F</div>
+              </div>
+              <select class="rule" ng-model="obj.rule" ng-class="{'invalid': isRuleValid(obj)}" ng-show="obj.edit">
+                <option value="">Select Rule</option>
+                <option value="reit">Reiteration</option>
+                <option value="neg">Negation</option>
+                <option value="and">Conjunction</option>
+                <option value="or">Disjunction</option>
+                <option value="imp">Implication</option>
+                <option value="bic">Biconditional</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   </body>
