@@ -5,7 +5,6 @@
     <title>Short Truth Tables</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript" src="https://code.angularjs.org/1.7.7/angular.js"></script>
-    <script type="text/javascript" src="logic.js"></script>
     <script type="text/javascript" src="app.js"></script>
   </head>
   <body ng-app="shortTruthTables" ng-controller="MainCtrl">
@@ -13,7 +12,20 @@
       <h1>Short Truth Tables</h1>
       <a href="manual.html"><button class="btn">Manual</button></a>
       <button class="btn" ng-click="export()">Export Save</button>
-      <button class="btn" ng-click="import()">Import File</button>
+      <div class="file-upload btn">
+        <span>Import Save</span>
+        <input
+          class="btn upload"
+          type="file"
+          accept=".bram"
+          ng-model="file.data"
+          file-select="data"
+          file-loaded="import()"
+          file-error="importError($error)"
+          file-progress="importProgress($total, $loaded)"
+        />
+      </div>
+      <p ng-show="importStatus">{{importStatus}}</p>
       <p class="detail">BramHub 2019: Andrew Imrie, Maya Tung</p>
     </aside>
     <main>
@@ -22,12 +34,21 @@
         <button class="switch" ng-click="inputMode = false;" ng-class="{'active': !inputMode}">Table</button>
       </div>
       <section ng-if="inputMode">
+        <div class="switch-container">
+          <button class="switch" ng-click="task = 'Validity';" ng-class="{'active': task == 'Validity'}">Validity</button>
+          <button class="switch switch-middle" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
+          <button class="switch" ng-click="task = 'Tautology';" ng-class="{'active': task == 'Tautology'}">Tautology</button>
+        </div>
         <div ng-repeat="input in inputs" class="inputs">
+          <div class="switch-container type-picker">
+            <button class="switch" ng-click="input.conclusion = false;" ng-class="{'active': !input.conclusion}">P</button>
+            <button class="switch" ng-click="input.conclusion = true;" ng-class="{'active': input.conclusion}">C</button>
+          </div>
           <input
             id="{{'input-' + input.id}}"
             class="input"
             type="text"
-            placeholder="New expression"
+            placeholder="New Expression"
             value=""
             ng-model="input.str"
             ng-keypress="enterInput($event)"
@@ -38,28 +59,31 @@
           <div class="btn input" ng-click="deleteInput(input)">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>
         </div>
-        <button class="btn" ng-click="addInput()">Add New</button>
+        <button class="btn btn-full" ng-click="addInput()">Add Expression</button>
       </section>
       <section class="table" ng-if="!inputMode">
-        <div ng-repeat="expression in expressions">
+        <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
-            <div class="tcell obj" ng-repeat="obj in expression.obj" ng-click="connect(obj)">
+            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking}">
               {{obj.str}}
             </div>
           </div>
-          <div class="trow">
-            <div class="tcell" ng-repeat="obj in expression.obj">
-              {{obj.val}}<sub>{{obj.num}}</sub>
+          <div class="trow value">
+            <div class="tcell value"
+                 ng-repeat="obj in expression.objs"
+                 ng-click="connect(obj)"
+                 ng-class="{'unknown': obj.val.bool != null && obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}">
+              {{obj.val.bool}}<sub>{{obj.val.num}}</sub>
             </div>
           </div>
           <div class="trow edit" ng-if="editing">
-            <div class="tcell" ng-repeat="obj in expression.obj">
+            <div class="tcell" ng-repeat="obj in expression.objs">
               <div class="switch-container" ng-show="obj.edit">
                 <div class="switch" ng-click="setObjVal(obj, 'T')" ng-class="{'active': obj.exp.value == true}">T</div>
-                <div class="switch switch-middle" ng-click="setObjVal(obj, '')" ng-class="{'active': obj.exp.value == null}"></div>
+                <div class="switch switch-middle" ng-click="setObjVal(obj, null)" ng-class="{'active': obj.exp.value == null}"></div>
                 <div class="switch" ng-click="setObjVal(obj, 'F')" ng-class="{'active': obj.exp.value == false}">F</div>
               </div>
-              <select class="rule" ng-model="obj.rule" ng-class="{'invalid': isRuleValid(obj)}" ng-show="obj.edit">
+              <select class="rule" ng-model="obj.val.rule" ng-change="verifyRule(obj)" ng-class="{'linking': linking, 'unkown': obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}" ng-show="obj.edit">
                 <option value="">Select Rule</option>
                 <option value="reit">Reiteration</option>
                 <option value="neg">Negation</option>

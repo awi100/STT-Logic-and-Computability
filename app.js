@@ -30,12 +30,183 @@ function checkReit(){
   var first = {e1: "A", e2: null, value: true, oper: null, depth: 0};
   var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
                 e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
-                value: null, oper: "^", depth: 0};
+                value: null, oper: "&", depth: 0};
   var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
                 e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
-                value: null, oper: "^", depth: 0};
+                value: null, oper: "&", depth: 0};
   var fourth = {e1: "D", e2: null, value: true, oper: null, depth: 0};
   var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1}, e2: null, value: true, oper: "~", depth: 0}
+  console.log(reit(first, second));
+  console.log(reit(first, third));
+  console.log(reit(second, third));
+  console.log(reit(first, fourth));
+  console.log(reit(first, fifth));
+}
+
+function and(express){
+  if (express.value == null){
+    return false;
+  }
+  if (express.value == true){
+    return (express.e1.value == true && express.e2.value == true) ||
+            (express.e1.value == true && express.e2.value == null) ||
+            (express.e1.value == null && express.e2.value == true) ;
+  }
+  else{
+    return express.e1.value == false || express.e2.value == false;
+  }
+}
+
+function checkAnd(){
+  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "&", depth: 0};
+  var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: false, oper: "&", depth: 0};
+  var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "&", depth: 0};
+  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "&", depth: 0};
+  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: true, oper: "&", depth: 0};
+  // More complex test
+  // (A & B) & (C | D)
+   var sixth = {e1: {e1: {e1: "A", e2: null, value: null, oper: null, depth: 2},
+                    e2: {e1: "B", e2: null, value: null, oper: null, depth: 2},
+                          value: true, oper: "&", depth: 1},
+              e2:   {e1: {e1: "C", e2: null, value: null, oper: null, depth: 2},
+                    e2: {e1: "D", e2: null, value: null, oper: null, depth: 2},
+                          value: false, oper: "|", depth: 1}, value: false,
+              oper: "&", depth: 0}
+  // test null
+  var seventh = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
+               value: true, oper: "&", depth: 0};
+
+  console.log(and(first));
+  console.log(and(second));
+  console.log(and(third));
+  console.log(and(fourth));
+  console.log(and(fifth));
+  console.log(and(sixth));
+  console.log(and(seventh));
+}
+function or(express){
+  if (express.value == null){
+    return false;
+  }
+  if (express.value == true){
+    return express.e1.value == true || express.e2.value == true;
+  }
+  else{
+    return express.e1.value == false && express.e2.value == false;
+  }
+}
+  function checkOr(){
+  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "^", depth: 0};
+  var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: false, oper: "^", depth: 0};
+  var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "^", depth: 0};
+  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "^", depth: 0};
+  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: true, oper: "^", depth: 0};
+  console.log(or(first));
+  console.log(or(second));
+  console.log(or(third));
+  console.log(or(fourth));
+  console.log(or(fifth));
+}
+
+function implication(express){
+  if (express.value == null)
+    return false;
+  if (express.value == true){
+    //for a true implication
+    //if antecedent is true, consequence must be true
+    //else antecedent is false, whole expression is true
+    if (express.e1.value == true)
+      return express.e2.value == true;
+    else
+      return true;
+  }
+  else{
+    //for a false implication
+    //if antecedent is true, consequence must be false
+    //else antecedent is false, whole expression is false
+    if (express.e1.value == true)
+      return express.e2.value == false;
+    else
+      return false;
+  }
+}
+
+function checkImplication(){
+  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "$", depth: 0};
+  var second = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "$", depth: 0};
+  var third = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: true, oper: "$", depth: 0};
+  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "$", depth: 0};
+  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "$", depth: 0};
+  console.log(implication(first));
+  console.log(implication(second));
+  console.log(implication(third));
+  console.log(implication(fourth));
+  console.log(implication(fifth));
+
+}
+
+function biconditional(express){
+  if (express.value == null)
+    return false;
+  if (express.value == true)
+    return (express.e1.value == true && express.e2.value == true) || (express.e1.value == false && express.e2.value == false);
+  else
+    return (express.e1.value == true && express.e2.value == false) || (express.e1.value == false && express.e2.value == true);
+}
+
+function checkBiconditional(){
+  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: true, oper: "%", depth: 0};
+  var second = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: true, oper: "%", depth: 0};
+  var third = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
+               value: true, oper: "%", depth: 0};
+  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "%", depth: 0};
+  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
+              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
+               value: false, oper: "%", depth: 0};
+
+  console.log(biconditional(first));
+  console.log(biconditional(second));
+  console.log(biconditional(third));
+  console.log(biconditional(fourth));
+  console.log(biconditional(fifth));
 }
 
 //function to check if there are parens around the
@@ -59,10 +230,31 @@ function checkUselessParens(text){
 }
 
 function isOperator(char){
-  return char == '|' || char == '^' || char == "&";
+  return char == '|' || char == '&' || char == '$' || char == '%';
+}
+//can be passed a char or charCode
+function charIsLiteral(char){
+  if (typeof char == "string"){
+    charCode = char.charCodeAt(0);
+    return charCode > 64 && charCode < 91;
+  }
+  return char > 64 && char < 91;
+}
+
+function checkValidAlphabet(text){
+  var char;
+  for (var i = 0; i < text.length; i++){
+    var charCode = text.charCodeAt(i);
+    var char = text.charAt(i);
+    if (!(charCode >= 65 && charCode <= 90) && char != '(' && char != ')' && char != ' ' &&
+          char != '&' && char != '|' && char != '~' && char != '$' && char != '%')
+      return false;
+  }
+  return true;
 }
 
 function validateInput(text){
+  if (checkValidAlphabet(text) == false) return "Characters used not in valid alphabet";
   var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false;
   for (i = 0; i < text.length; i++){
     var char = text.charAt(i);
@@ -85,8 +277,19 @@ function validateInput(text){
     //check for another operator appearing on level 0
 
     //check for literals longer than 1 char
-    if(i > 0 && charCode > 64 && charCode < 91 && (text.charCodeAt(i-1) > 64 && text.charCodeAt(i-1) < 91))
+    if(i > 0 && charIsLiteral(char) && charIsLiteral(text.charAt(i-1)))
       return "Literals must be length 1";
+    //check that literals are not double spaced
+    if (i > 1 && text.charAt(i-1) == ' ' && text.charAt(i-2) == ' ')
+      return "Input cannot be double spaced";
+    //check that chars are seperated with operator
+    if (i > 1 && charIsLiteral(char) && (text.charAt(i-1) == ' ' || text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && charIsLiteral(text.charAt(i-2)))
+      return "Literals must be seperated by an operator";
+    //check that operators are seperated with a literal
+    if (i > 1 && isOperator(char) && isOperator(text.charAt(i-1)))
+      return "Operators must be seperated by a literal";
+    if (i > 1 && isOperator(char) && (text.charAt(i-1) == ' ' || text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && isOperator(text.charAt(i-2)))
+      return "Operators must be seperated by a literal";
   }
   //cannot have two operators at the top level
   if (numOfZeroDepths > 1 && containsParens) return "Only 1 main operator allowed.";
@@ -97,10 +300,11 @@ function validateInput(text){
 }
 
 function newObj(str, exp) {
-  return {str: str, exp: exp, rule: "", val: null, num: null, edit: false}
+  if (str in inputMap) str = inputMap[str];
+  return {str: str, exp: exp, val: {bool: null, num: null, rule: "", link: null, valid: null}, edit: false}
 }
 
-function createObject(text, counter, obj){
+function createObject(text, counter, objs){
   //for consistency
   text = text.toUpperCase()
   //clean text of spaces
@@ -121,7 +325,7 @@ function createObject(text, counter, obj){
   //return literal (base case)
   if (text.length == 1){
     express = {e1: text, e2: null, value: null, oper: null, depth: counter};
-    obj.push(newObj(text, express));
+    objs.push(newObj(text, express));
     return express;
   }
   if (text.length == 2){
@@ -129,8 +333,8 @@ function createObject(text, counter, obj){
     var lit = text.charAt(1);
     var myLit = {e1: lit, e2: null, value: null, oper: null, depth: counter+1};
     express = {e1: myLit, e2: null, value: null, oper: neg, depth: counter};
-    obj.push(newObj(neg, express));
-    obj.push(newObj(lit, express));
+    objs.push(newObj(neg, express));
+    objs.push(newObj(lit, express));
     return express;
   }
   //calculate the max depth level
@@ -153,9 +357,9 @@ function createObject(text, counter, obj){
       var left = text.substring(0, i);
       var right = text.substring(i+1, text.length);
       // Set e2 as null first so obj has correct order
-      express = {e1: createObject(left, counter+1, obj), e2: null, value: null, oper: char, depth: counter};
-      obj.push(newObj(char, express));
-      express.e2 = createObject(right, counter+1, obj);
+      express = {e1: createObject(left, counter+1, objs), e2: null, value: null, oper: char, depth: counter};
+      objs.push(newObj(char, express));
+      express.e2 = createObject(right, counter+1, objs);
       return express;
    }
   }
@@ -185,11 +389,15 @@ var app = angular.module("shortTruthTables", []);
 
 app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.editing = null;
+  $scope.linking = null;
   $scope.inputMode = true;
-  $scope.inputs = [{str: "", id: 0}];
+  $scope.inputs = [{id: 0, str: "", err: "", conclusion: false}];
   $scope.idCounter = 0;
   $scope.expressions = [];
   $scope.stepCounter = 0;
+  $scope.file = {data: null};
+  $scope.modified = false;
+  $scope.task = "Validity";
 
   function nextId() {
     $scope.idCounter++;
@@ -198,7 +406,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
 
   $scope.addInput = () => {
     let id = nextId();
-    $scope.inputs.push({id: id, str: "", err: ""});
+    $scope.inputs.push({id: id, str: "", err: "", conclusion: false});
     $timeout(() => {
       document.getElementById("input-" + id).focus();
     });
@@ -208,11 +416,30 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     if (e.key === "Enter") $scope.addInput(); // On enter, submit input
   };
 
+  function cleanStepCounter(objs) {
+    // Turn back step counter for each counted in old exp
+    let nums = [];
+    objs.forEach((o) => {
+      if (o.val.num != null) {
+        nums.push(o.val.num);
+      }
+    });
+    nums.forEach((n) => {
+      $scope.expressions.forEach((e) => {
+        e.objs.forEach((o) => {
+          if (o.val.num >= n) o.val.num -= 1;
+        });
+      });
+      $scope.stepCounter -= 1;
+    });
+  }
+
   $scope.deleteInput = (input) => {
-    let removeIndex = $scope.inputs.indexOf(input);
-    $scope.inputs.splice(removeIndex, 1);
-    removeIndex = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
-    $scope.expressions.splice(removeIndex, 1);
+    let idx = $scope.inputs.indexOf(input);
+    $scope.inputs.splice(idx, 1);
+    idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
+    cleanStepCounter($scope.expressions[idx].objs);
+    $scope.expressions.splice(idx, 1);
   };
 
   $scope.validateInput = (input) => {
@@ -220,53 +447,91 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     input.err = validateInput(input.str);
     // If valid, add to expressions
     if (input.err == "") {
-      let obj = [];
-      let expression = createObject(input.str, 0, obj);
-      if (idx == -1) { // If doesn't exist, push new
-        $scope.expressions.push({id: input.id, obj: obj, exp: expression});
+      let objs = [];
+      let expression = createObject(input.str, 0, objs);
+      if (idx == -1) { // If doesn"t exist, push new
+        $scope.expressions.push({id: input.id, objs: objs, exp: expression});
       } else { // If does exist, edit
+        cleanStepCounter($scope.expressions[idx].objs);
         $scope.expressions[idx].exp = expression;
-        $scope.expressions[idx].obj = obj;
+        $scope.expressions[idx].objs = objs;
       }
     } else if (idx != -1) { // Remove, if invalidated
       $scope.expressions.splice(idx, 1);
     }
-    console.log($scope.expressions)
   };
 
   $scope.connect = (obj) => {
-    if ($scope.editing) {
-      $scope.editing.edit = false;
-      if ($scope.editing.rule == "reit") {
-
+    if ($scope.linking) {
+      $scope.linking.val.link = obj;
+      $scope.verifyRule($scope.linking);
+      $scope.linking = null;
+    } else {
+      if ($scope.editing && $scope.editing != obj) {
+        $scope.editing.edit = false;
+        obj.edit = true;
+      } else {
+        obj.edit = !obj.edit;
       }
+      $scope.editing = obj.edit ? obj : null;
     }
-    $scope.editing = obj;
-    obj.edit = true;
   };
 
   $scope.setObjVal = (obj, val) => {
-    console.log(obj)
+    // If setting to null, work steps backwards
     if (obj.exp.value != null && !val) {
       $scope.expressions.forEach((e) => {
-        e.obj.num -= 1;
+        e.objs.forEach((o) => {
+          if (o.val.num > obj.val.num) o.val.num -= 1;
+        });
       });
       $scope.stepCounter--;
     } else if (obj.exp.value == null && val) {
       $scope.stepCounter++;
     }
-    obj.val = val;
+    obj.val.bool = val;
+    // Set to bool
     if (val) {
       obj.exp.value = (val == "T");
-      obj.num = $scope.stepCounter;
+      // Increment step iff was not already set to bool
+      if (obj.val.num == null) obj.val.num = $scope.stepCounter;
     } else {
+      // Set to empty
       obj.exp.value = null;
-      obj.num = null;
+      obj.val.num = null;
     }
   };
 
-  $scope.isObjValid = (obj) => {
-    return false;
+  $scope.verifyRule = (obj) => {
+    if (!$scope.linking) {
+      $scope.linking = obj;
+    } else {
+      switch (obj.val.rule) {
+        case "":
+        obj.val.valid = null;
+        break;
+        case "reit":
+        obj.val.valid = obj.val.link == null ? null : reit(obj.exp, obj.val.link.exp);
+        break;
+        case "and":
+        obj.val.valid = and(obj.val.link.exp);
+        break;
+        case "or":
+        obj.val.valid = or(obj.val.link.exp);
+        break;
+        case "imp":
+        obj.val.valid = implication(obj.val.link.exp);
+        break;
+        case "bic":
+        obj.val.valid = biconditional(obj.val.link.exp);
+        break;
+        case "neg":
+        // obj.val.valid = negation(obj.val.link.exp);
+        break;
+        default:
+        obj.val.valid = null;
+      }
+    }
   };
 
   $scope.export = () => {
@@ -283,29 +548,83 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(blob, filename);
     } else {
-        var e = document.createEvent('MouseEvents'),
-        a = document.createElement('a');
+        let e = document.createEvent("MouseEvents"),
+        a = document.createElement("a");
         a.download = filename;
         a.href = window.URL.createObjectURL(blob);
-        a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
-        e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        a.dataset.downloadurl = ["text/json", a.download, a.href].join(":");
+        e.initEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
         a.dispatchEvent(e);
         // window.URL.revokeObjectURL(a.href); // clean the url.createObjectURL resource
     }
   };
 
   $scope.import = () => {
-    return false;
+    $scope.importStatus = "Loading... ";
+    let header = $scope.file.data.indexOf(";base64,");
+    let json = JSON.parse(atob($scope.file.data.substring(header+8)));
+    $scope.editing = json.editing;
+    $scope.inputMode = json.inputMode;
+    $scope.inputs = json.inputs;
+    $scope.idCounter = json.idCounter;
+    $scope.expressions = json.expressions;
+    $scope.stepCounter = json.stepCounter;
+    $scope.modified = json.modified;
+    $scope.importStatus = "";
+  };
+
+  $scope.importError = (e) => {
+    $scope.importStatus = e;
+  };
+
+  $scope.importProgress = (t, l) => {
+    $scope.importStatus = "Loading... " + l + "/" + t;
+  }
+}]);
+
+app.directive("fileSelect", ["$window", function ($window) {
+  return {
+    restrict: "A",
+    require: "ngModel",
+    link: function (scope, el, attr, ctrl) {
+      let fileReader = new $window.FileReader();
+
+      fileReader.onload = function () {
+        ctrl.$setViewValue(fileReader.result);
+
+        if ("fileLoaded" in attr) {
+          scope.$eval(attr["fileLoaded"]);
+        }
+      };
+
+      fileReader.onprogress = function (event) {
+        if ("fileProgress" in attr) {
+          scope.$eval(attr["fileProgress"], {"$total": event.total, "$loaded": event.loaded});
+        }
+      };
+
+      fileReader.onerror = function () {
+        if ("fileError" in attr) {
+          scope.$eval(attr["fileError"], {"$error": fileReader.error});
+        }
+      };
+
+      let fileType = attr["fileSelect"];
+
+      el.bind("change", function (e) {
+        let fileName = e.target.files[0];
+        if (fileType === "bram") {
+          fileReader.readAsText(fileName);
+        } else if (fileType === "data") {
+          fileReader.readAsDataURL(fileName);
+        }
+      });
+    }
   };
 }]);
 
-app.directive("ngFileSelect",function() {
-  return {
-    link: function($scope,el){
-      el.bind("change", function(e){
-        $scope.file = (e.srcElement || e.target).files[0];
-        $scope.getFile();
-      });
-    }
-  }
+app.filter('reverse', function() {
+  return function(items) {
+    return items.slice().reverse();
+  };
 });
