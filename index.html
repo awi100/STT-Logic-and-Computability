@@ -39,27 +39,41 @@
           <button class="switch switch-middle" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
           <button class="switch" ng-click="task = 'Tautology';" ng-class="{'active': task == 'Tautology'}">Tautology</button>
         </div>
-        <div ng-repeat="input in inputs" class="inputs">
-          <div class="switch-container type-picker">
-            <button class="switch" ng-click="input.conclusion = false;" ng-class="{'active': !input.conclusion}">P</button>
-            <button class="switch" ng-click="input.conclusion = true;" ng-class="{'active': input.conclusion}">C</button>
-          </div>
+        <div ng-repeat="input in premises" class="inputs">
           <input
-            id="{{'input-' + input.id}}"
+            id="{{'premise-' + input.id}}"
             class="input"
             type="text"
-            placeholder="New Expression"
+            placeholder="Premise"
             value=""
             ng-model="input.str"
-            ng-keypress="enterInput($event)"
-            ng-change="validateInput(input)"
+            ng-keypress="enterInput($event, 'premise')"
+            ng-change="validateInput(input, 'premise')"
             ng-class="{'invalid': input.err}"
             onfocus="verifyChange()"
           />
-          <div class="btn input" ng-click="deleteInput(input)">✖</div>
+          <div class="btn input" ng-click="deleteInput(input, 'premise')">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>
         </div>
-        <button class="btn btn-full" ng-click="addInput()">Add Expression</button>
+        <button class="btn btn-full" ng-click="addInput('premise')">Add Premise</button>
+        <p class="label" ng-if="input.conclusion">Goals:</p>
+        <div ng-repeat="input in conclusions" class="inputs">
+          <input
+            id="{{'conclusion-' + input.id}}"
+            class="input"
+            type="text"
+            placeholder="Conclusion"
+            value=""
+            ng-model="input.str"
+            ng-keypress="enterInput($event, 'conclusion')"
+            ng-change="validateInput(input, 'conclusion')"
+            ng-class="{'invalid': input.err}"
+            onfocus="verifyChange()"
+          />
+          <div class="btn input" ng-click="deleteInput(input, 'conclusion')">✖</div>
+          <p class="err input" ng-if="input.err">{{input.err}}</p>
+        </div>
+        <button class="btn btn-full" ng-click="addInput('conclusion')">Add Conclusion</button>
       </section>
       <section class="table" ng-if="!inputMode">
         <div class="inline" ng-repeat="expression in expressions">

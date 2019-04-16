@@ -391,29 +391,35 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.editing = null;
   $scope.linking = null;
   $scope.inputMode = true;
-  $scope.inputs = [{id: 0, str: "", err: "", conclusion: false}];
-  $scope.idCounter = 0;
+  $scope.premises = [{id: 0, str: "", err: ""}];
+  $scope.conclusions = [{id: 0, str: "", err: ""}];
+  $scope.idCounterPremise = 0;
+  $scope.idCounterConclusion = 0;
+  $scope.expPremises = [];
+  $scope.expConclusions = [];
   $scope.expressions = [];
   $scope.stepCounter = 0;
   $scope.file = {data: null};
   $scope.modified = false;
   $scope.task = "Validity";
 
-  function nextId() {
-    $scope.idCounter++;
-    return $scope.idCounter;
+  function nextId(type) {
+    let counter = (type == "premise") ? $scope.idCounterPremise : $scope.idCounterConclusion
+    counter++;
+    return counter;
   }
 
-  $scope.addInput = () => {
-    let id = nextId();
-    $scope.inputs.push({id: id, str: "", err: "", conclusion: false});
+  $scope.addInput = (type) => {
+    let id = nextId(type);
+    let container = (type == "premise") ? $scope.premises : $scope.conclusions;
+    container.push({id: id, str: "", err: ""});
     $timeout(() => {
-      document.getElementById("input-" + id).focus();
+      document.getElementById(type + "-" + id).focus();
     });
   };
 
-  $scope.enterInput = (e) => {
-    if (e.key === "Enter") $scope.addInput(); // On enter, submit input
+  $scope.enterInput = (e, type) => {
+    if (e.key === "Enter") $scope.addInput(type); // On enter, submit input
   };
 
   function cleanStepCounter(objs) {
@@ -434,31 +440,45 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     });
   }
 
-  $scope.deleteInput = (input) => {
-    let idx = $scope.inputs.indexOf(input);
-    $scope.inputs.splice(idx, 1);
-    idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
-    cleanStepCounter($scope.expressions[idx].objs);
-    $scope.expressions.splice(idx, 1);
+  $scope.deleteInput = (input, type) => {
+    let container = (type == "premise") ? $scope.premises : $scope.conclusions;
+    let expressions = (type == "premise") ? $scope.expPremises : $scope.expConclusions;
+    let counter = (type == "premise") ? $scope.idCounterPremise : $scope.idCounterConclusion;
+    let idx = container.indexOf(input);
+    container.splice(idx, 1);
+    idx = expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
+    cleanStepCounter(expressions[idx].objs);
+    container.forEach((i) => {
+      if (i.id > input.id) i.id -= 1;
+    });
+    counter -= 1;
   };
 
-  $scope.validateInput = (input) => {
-    let idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
+  $scope.validateInput = (input, type) => {
+    let container = (type == "premise") ? $scope.expPremises : $scope.expConclusions;
+    let idx = container.map(function(exp) { return exp.id; }).indexOf(input.id);
     input.err = validateInput(input.str);
     // If valid, add to expressions
+    console.log(idx)
     if (input.err == "") {
       let objs = [];
       let expression = createObject(input.str, 0, objs);
       if (idx == -1) { // If doesn"t exist, push new
-        $scope.expressions.push({id: input.id, objs: objs, exp: expression});
+        container.push({id: input.id, objs: objs, exp: expression});
       } else { // If does exist, edit
-        cleanStepCounter($scope.expressions[idx].objs);
-        $scope.expressions[idx].exp = expression;
-        $scope.expressions[idx].objs = objs;
+        cleanStepCounter(container[idx].objs);
+        container[idx].exp = expression;
+        container[idx].objs = objs;
       }
     } else if (idx != -1) { // Remove, if invalidated
-      $scope.expressions.splice(idx, 1);
+      container.splice(idx, 1);
     }
+    // Increment conclusion IDs to fit inside expressions
+    let temp = $scope.expConclusions;
+    temp.forEach((e) => {
+      e.id += $scope.idCounterPremise;
+    });
+    $scope.expressions = $scope.expPremises.concat(temp);
   };
 
   $scope.connect = (obj) => {
@@ -505,6 +525,8 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.verifyRule = (obj) => {
     if (!$scope.linking) {
       $scope.linking = obj;
+      obj.val.valid = null;
+      obj.val.link = null;
     } else {
       switch (obj.val.rule) {
         case "":
@@ -539,7 +561,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     let save = {
       editing: $scope.editing,
       inputMode: $scope.inputMode,
-      inputs: $scope.inputs,
+      premises: $scope.premises,
       idCounter: $scope.idCounter,
       expressions: $scope.expressions,
       stepCounter: $scope.stepCounter
@@ -565,7 +587,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     let json = JSON.parse(atob($scope.file.data.substring(header+8)));
     $scope.editing = json.editing;
     $scope.inputMode = json.inputMode;
-    $scope.inputs = json.inputs;
+    $scope.premises = json.inputs;
     $scope.idCounter = json.idCounter;
     $scope.expressions = json.expressions;
     $scope.stepCounter = json.stepCounter;

@@ -66,6 +66,11 @@ border-width:0;
 padding:2vh;
 }
 
+.inputs .label {
+margin-top: 0;
+flex:1 0 100%;
+}
+
 .inputs .err {
 color:#CC2828;
 }
@@ -92,6 +97,7 @@ background-color:#555;
 
 .btn-full {
 width:100%;
+margin-bottom:3vh;
 }
 
 aside .btn {
