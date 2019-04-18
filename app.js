@@ -174,12 +174,13 @@ function validateInput(text){
   return "";
 }
 
-function newObj(str, exp) {
+function newObj(str, exp, intangible) {
   if (str in inputMap) str = inputMap[str];
-  return {str: str, exp: exp, val: {bool: null, num: null, rule: "", link: null, valid: null}, edit: false}
+  return {str: str, exp: exp, intangible: intangible, val: {num: null, rule: "", link: null, valid: null}, edit: false}
 }
 
 function createObject(text, counter, objs){
+  text = text.replace(/ /g,''); //remove whitespace
   //for consistency
   text = text.toUpperCase()
   //clean text of spaces
@@ -195,7 +196,7 @@ function createObject(text, counter, objs){
   //return literal (base case)
   if (text.length == 1){
     express = {e1: text, e2: null, value: null, oper: null, depth: counter};
-    objs.push(newObj(text, express));
+    objs.push(newObj(text, express, false));
     return express;
   }
   if (text.length == 2){
@@ -203,8 +204,8 @@ function createObject(text, counter, objs){
     var lit = text.charAt(1);
     var myLit = {e1: lit, e2: null, value: null, oper: null, depth: counter+1};
     express = {e1: myLit, e2: null, value: null, oper: neg, depth: counter};
-    objs.push(newObj(neg, express));
-    objs.push(newObj(lit, express));
+    objs.push(newObj(neg, express, false));
+    objs.push(newObj(lit, express, false));
     return express;
   }
   //calculate the max depth level
@@ -229,11 +230,11 @@ function createObject(text, counter, objs){
       var left = text.substring(0, i);
       var right = text.substring(i+1, text.length);
       // Set e2 as null first so obj has correct order
-      objs.push(newObj("(", null));
+      objs.push(newObj("(", null, true));
       express = {e1: createObject(left, counter+1, objs), e2: null, value: null, oper: char, depth: counter};
-      objs.push(newObj(char, express));
+      objs.push(newObj(char, express, false));
       express.e2 = createObject(right, counter+1, objs);
-      objs.push(newObj(")", null));
+      objs.push(newObj(")", null, true));
       return express;
    }
   }
@@ -278,9 +279,13 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.task = "Validity";
 
   function nextId(type) {
-    let counter = (type == "premise") ? $scope.idCounterPremise : $scope.idCounterConclusion
-    counter++;
-    return counter;
+    if (type == "premise") {
+      $scope.idCounterPremise++;
+      return $scope.idCounterPremise;
+    } else {
+      $scope.idCounterConclusion++;
+      return $scope.idCounterConclusion;
+    }
   }
 
   $scope.addInput = (type) => {
@@ -328,16 +333,24 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     counter -= 1;
   };
 
+  function combine(o1, o2) {
+    // Increment conclusion IDs to fit inside expressions
+    let temp = o2;
+    temp.forEach((e) => {
+      e.id += o1.length;
+    });
+    return o1.concat(temp);
+  }
+
   $scope.validateInput = (input, type) => {
     let container = (type == "premise") ? $scope.expPremises : $scope.expConclusions;
     let idx = container.map(function(exp) { return exp.id; }).indexOf(input.id);
     input.err = validateInput(input.str);
     // If valid, add to expressions
-    console.log(idx)
     if (input.err == "") {
       let objs = [];
       let expression = createObject(input.str, 0, objs);
-      objs = objs.slice(1, objs.length-1)
+      if (objs.length > 2) objs = objs.slice(1, objs.length-1);
       if (idx == -1) { // If doesn"t exist, push new
         container.push({id: input.id, objs: objs, exp: expression});
       } else { // If does exist, edit
@@ -348,16 +361,19 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     } else if (idx != -1) { // Remove, if invalidated
       container.splice(idx, 1);
     }
-    // Increment conclusion IDs to fit inside expressions
-    let temp = $scope.expConclusions;
-    temp.forEach((e) => {
-      e.id += $scope.idCounterPremise;
-    });
-    $scope.expressions = $scope.expPremises.concat(temp);
+    $scope.expressions = combine($scope.expPremises, $scope.expConclusions)
   };
 
+  $scope.getValString = (val) => {
+    if (val == null) {
+      return "";
+    } else {
+      return (val) ? "T" : "F";
+    }
+  }
+
   $scope.connect = (obj) => {
-    if (obj.exp == null) return; // If intangible, exit
+    if (obj.intangible) return; // If intangible, exit
     if ($scope.linking) {
       $scope.linking.val.link = obj;
       $scope.verifyRule($scope.linking);
@@ -385,7 +401,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     } else if (obj.exp.value == null && val) {
       $scope.stepCounter++;
     }
-    obj.val.bool = val;
     // Set to bool
     if (val) {
       obj.exp.value = (val == "T");
@@ -398,6 +413,38 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
+  $scope.initValues = () => {
+    $scope.expPremises.forEach((e) => {
+      e.exp.value = true;
+      topLevel = e.exp;
+      e.objs.forEach((o) => {
+        if (o.exp == e.exp) {
+          o.intangible = true;
+          o.exp.oper = temp;
+        } else {
+          o.intangible = false;
+        }
+      });
+    });
+    $scope.expConclusions.forEach((e) => {
+      e.exp.value = false;
+      topLevel = e.exp;
+      e.objs.forEach((o) => {
+        if (o.exp == e.exp) {
+          o.intangible = true;
+          o.exp.oper = temp;
+        } else {
+          o.intangible = false;
+        }
+      });
+    });
+    $scope.expressions = combine($scope.expPremises, $scope.expConclusions)
+  }
+
+  $scope.showContradiction = () => {
+    //TODO contradiction checking
+  }
+
   $scope.verifyRule = (obj) => {
     if (!$scope.linking) {
       $scope.linking = obj;
@@ -406,28 +453,28 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     } else {
       switch (obj.val.rule) {
         case "":
-        obj.val.valid = null;
-        break;
+          obj.val.valid = null;
+          break;
         case "reit":
-        obj.val.valid = obj.val.link == null ? null : reit(obj.exp, obj.val.link.exp);
-        break;
+          obj.val.valid = obj.val.link == null ? null : reit(obj.exp, obj.val.link.exp);
+          break;
         case "and":
-        obj.val.valid = and(obj.val.link.exp);
-        break;
+          obj.val.valid = and(obj.val.link.exp);
+          break;
         case "or":
-        obj.val.valid = or(obj.val.link.exp);
-        break;
+          obj.val.valid = or(obj.val.link.exp);
+          break;
         case "imp":
-        obj.val.valid = implication(obj.val.link.exp);
-        break;
+          obj.val.valid = implication(obj.val.link.exp);
+          break;
         case "bic":
-        obj.val.valid = biconditional(obj.val.link.exp);
-        break;
+          obj.val.valid = biconditional(obj.val.link.exp);
+          break;
         case "neg":
-        // obj.val.valid = negation(obj.val.link.exp);
-        break;
+          // obj.val.valid = negation(obj.val.link.exp);
+          break;
         default:
-        obj.val.valid = null;
+          obj.val.valid = null;
       }
     }
   };

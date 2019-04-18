@@ -31,13 +31,12 @@
     <main>
       <div class="switch-container">
         <button class="switch" ng-click="inputMode = true;" ng-class="{'active': inputMode}">Input</button>
-        <button class="switch" ng-click="inputMode = false;" ng-class="{'active': !inputMode}">Table</button>
+        <button class="switch" ng-click="inputMode = false; initValues();" ng-class="{'active': !inputMode}">Table</button>
       </div>
       <section ng-if="inputMode">
         <div class="switch-container">
           <button class="switch" ng-click="task = 'Validity';" ng-class="{'active': task == 'Validity'}">Validity</button>
           <button class="switch" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
-<!--           <button class="switch" ng-click="task = 'Tautology';" ng-class="{'active': task == 'Tautology'}">Tautology</button> -->
         </div>
         <div ng-repeat="input in premises" class="inputs">
           <input
@@ -76,9 +75,10 @@
         <button class="btn btn-full" ng-if="task == 'Validity'" ng-click="addInput('conclusion')">Add Conclusion</button>
       </section>
       <section class="table" ng-if="!inputMode">
+        <button class="btn btn-full" ng-click="showContradiction()">Show Contradiction</button>
         <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
-            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking}">
+            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': obj.intangible}">
               {{obj.str}}
             </div>
           </div>
@@ -86,8 +86,8 @@
             <div class="tcell value"
                  ng-repeat="obj in expression.objs"
                  ng-click="connect(obj)"
-                 ng-class="{'unknown': obj.val.bool != null && obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}">
-              {{obj.val.bool}}<sub>{{obj.val.num}}</sub>
+                 ng-class="{'unknown': obj.exp.value != null && obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}">
+              {{getValString(obj.exp.value)}}<sub>{{obj.val.num}}</sub>
             </div>
           </div>
           <div class="trow edit" ng-if="editing">
