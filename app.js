@@ -20,31 +20,16 @@ function reit(express1, express2){
     return reit(express1, express2.e1) && reit(express1, express2.e2);
   }
   var sameLit = express1.e1 == express2.e1;
+  if (!sameLit)
+    return false;
   if (sameLit && express1.value != express2.value)
     return false;
   else
     return true;
 }
 
-function checkReit(){
-  var first = {e1: "A", e2: null, value: true, oper: null, depth: 0};
-  var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-                e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
-                value: null, oper: "&", depth: 0};
-  var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-                e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
-                value: null, oper: "&", depth: 0};
-  var fourth = {e1: "D", e2: null, value: true, oper: null, depth: 0};
-  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1}, e2: null, value: true, oper: "~", depth: 0}
-  console.log(reit(first, second));
-  console.log(reit(first, third));
-  console.log(reit(second, third));
-  console.log(reit(first, fourth));
-  console.log(reit(first, fifth));
-}
-
 function and(express){
-  if (express.value == null){
+  if (express.value == null || express.oper != '&'){
     return false;
   }
   if (express.value == true){
@@ -57,46 +42,8 @@ function and(express){
   }
 }
 
-function checkAnd(){
-  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "&", depth: 0};
-  var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: false, oper: "&", depth: 0};
-  var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "&", depth: 0};
-  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "&", depth: 0};
-  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: true, oper: "&", depth: 0};
-  // More complex test
-  // (A & B) & (C | D)
-   var sixth = {e1: {e1: {e1: "A", e2: null, value: null, oper: null, depth: 2},
-                    e2: {e1: "B", e2: null, value: null, oper: null, depth: 2},
-                          value: true, oper: "&", depth: 1},
-              e2:   {e1: {e1: "C", e2: null, value: null, oper: null, depth: 2},
-                    e2: {e1: "D", e2: null, value: null, oper: null, depth: 2},
-                          value: false, oper: "|", depth: 1}, value: false,
-              oper: "&", depth: 0}
-  // test null
-  var seventh = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: null, oper: null, depth: 1},
-               value: true, oper: "&", depth: 0};
-
-  console.log(and(first));
-  console.log(and(second));
-  console.log(and(third));
-  console.log(and(fourth));
-  console.log(and(fifth));
-  console.log(and(sixth));
-  console.log(and(seventh));
-}
 function or(express){
-  if (express.value == null){
+  if (express.value == null || express.oper != '|' || express.e1.value == null || express.e2.value == null){
     return false;
   }
   if (express.value == true){
@@ -106,31 +53,9 @@ function or(express){
     return express.e1.value == false && express.e2.value == false;
   }
 }
-  function checkOr(){
-  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "^", depth: 0};
-  var second = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: false, oper: "^", depth: 0};
-  var third = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "^", depth: 0};
-  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "^", depth: 0};
-  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-               e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: true, oper: "^", depth: 0};
-  console.log(or(first));
-  console.log(or(second));
-  console.log(or(third));
-  console.log(or(fourth));
-  console.log(or(fifth));
-}
 
 function implication(express){
-  if (express.value == null)
+  if (express.value == null || express.oper != '$')
     return false;
   if (express.value == true){
     //for a true implication
@@ -152,61 +77,13 @@ function implication(express){
   }
 }
 
-function checkImplication(){
-  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "$", depth: 0};
-  var second = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "$", depth: 0};
-  var third = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: true, oper: "$", depth: 0};
-  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "$", depth: 0};
-  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "$", depth: 0};
-  console.log(implication(first));
-  console.log(implication(second));
-  console.log(implication(third));
-  console.log(implication(fourth));
-  console.log(implication(fifth));
-
-}
-
 function biconditional(express){
-  if (express.value == null)
+  if (express.value == null || express.oper != '%')
     return false;
   if (express.value == true)
     return (express.e1.value == true && express.e2.value == true) || (express.e1.value == false && express.e2.value == false);
   else
     return (express.e1.value == true && express.e2.value == false) || (express.e1.value == false && express.e2.value == true);
-}
-
-function checkBiconditional(){
-  var first = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: true, oper: "%", depth: 0};
-  var second = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: true, oper: "%", depth: 0};
-  var third = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: false, oper: null, depth: 1},
-               value: true, oper: "%", depth: 0};
-  var fourth = {e1: {e1: "A", e2: null, value: true, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "%", depth: 0};
-  var fifth = {e1: {e1: "A", e2: null, value: false, oper: null, depth: 1},
-              e2: {e1: "B", e2: null, value: true, oper: null, depth: 1},
-               value: false, oper: "%", depth: 0};
-
-  console.log(biconditional(first));
-  console.log(biconditional(second));
-  console.log(biconditional(third));
-  console.log(biconditional(fourth));
-  console.log(biconditional(fifth));
 }
 
 //function to check if there are parens around the
