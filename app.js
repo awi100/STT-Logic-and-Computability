@@ -441,8 +441,29 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     $scope.expressions = combine($scope.expPremises, $scope.expConclusions)
   }
 
-  $scope.showContradiction = () => {
+  $scope.showContradiction = (express1, express2) => {
     //TODO contradiction checking
+    if (express1 == null || express2 == null)
+      return false;
+    var e1isLit = isLiteral(express1), e2isLit = isLiteral(express2);
+    if (!e1isLit && !e2isLit){
+      return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2) || showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
+    }
+    else if (!e1isLit){
+      return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2);
+    }
+    else if (!e2isLit){
+      return showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
+    }
+    var sameLit = express1.e1 == express2.e1;
+    if (!sameLit)
+      return false;
+    if (sameLit && express1.value != express2.value){
+      // console.log("contradiction");
+      return true;
+    }
+    else
+      return false;
   }
 
   $scope.verifyRule = (obj) => {
