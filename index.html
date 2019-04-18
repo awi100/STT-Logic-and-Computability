@@ -78,7 +78,7 @@
       <section class="table" ng-if="!inputMode">
         <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
-            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking}">
+            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': obj.exp == null}">
               {{obj.str}}
             </div>
           </div>

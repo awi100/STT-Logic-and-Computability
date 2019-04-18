@@ -312,11 +312,6 @@ function createObject(text, counter, objs){
     text = text.substring(1, text.length);
   if (text.charAt(text.length-1) == ' ')
     text = text.substring(0, text.length-1);
-  // var errMsg = validateInput(text);
-  // if (errMsg != ""){
-  //   document.getElementById('myText').value = errMsg;
-  //   return;
-  // }
   var express;
   //get rid of outer brackets if not needed
   while (checkUselessParens(text)){
@@ -349,10 +344,14 @@ function createObject(text, counter, objs){
   var level = 0;
   for (i = 0; i < text.length; i++){
     var char = text.charAt(i);
-    if (char == '(')
+    if (char == '(') {
       level++;
-    if (char == ')')
+      objs.push(newObj(char, null));
+    }
+    if (char == ')') {
       level--;
+      objs.push(newObj(char, null));
+    }
     if (isOperator(char) && level == 0){
       var left = text.substring(0, i);
       var right = text.substring(i+1, text.length);
@@ -482,6 +481,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   };
 
   $scope.connect = (obj) => {
+    if (obj.exp == null) return; // If intangible, exit
     if ($scope.linking) {
       $scope.linking.val.link = obj;
       $scope.verifyRule($scope.linking);

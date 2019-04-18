@@ -198,6 +198,10 @@ background-color:#EE6666;
 background-color: #99CCEE !important;
 }
 
+.intangible:hover {
+background-color: #FFF !important;
+}
+
 .rule {
 border:1px solid #000;
 }
