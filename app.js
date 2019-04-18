@@ -121,9 +121,9 @@ function charIsLiteral(char){
 function checkValidAlphabet(text){
   var char;
   for (var i = 0; i < text.length; i++){
-    var charCode = text.charCodeAt(i);
     var char = text.charAt(i);
-    if (!(charCode >= 65 && charCode <= 90) && char != '(' && char != ')' && char != ' ' &&
+    var charCode = char.toUpperCase().charCodeAt(0);
+    if ((charCode < 65 || charCode > 90) && char != '(' && char != ')' &&
           char != '&' && char != '|' && char != '~' && char != '$' && char != '%')
       return false;
   }
@@ -131,6 +131,7 @@ function checkValidAlphabet(text){
 }
 
 function validateInput(text){
+  text = text.replace(/ /g,''); //remove whitespace
   if (checkValidAlphabet(text) == false) return "Characters used not in valid alphabet";
   var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false;
   for (i = 0; i < text.length; i++){
@@ -156,16 +157,13 @@ function validateInput(text){
     //check for literals longer than 1 char
     if(i > 0 && charIsLiteral(char) && charIsLiteral(text.charAt(i-1)))
       return "Literals must be length 1";
-    //check that literals are not double spaced
-    if (i > 1 && text.charAt(i-1) == ' ' && text.charAt(i-2) == ' ')
-      return "Input cannot be double spaced";
     //check that chars are seperated with operator
-    if (i > 1 && charIsLiteral(char) && (text.charAt(i-1) == ' ' || text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && charIsLiteral(text.charAt(i-2)))
+    if (i > 1 && charIsLiteral(char) && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && charIsLiteral(text.charAt(i-2)))
       return "Literals must be seperated by an operator";
     //check that operators are seperated with a literal
     if (i > 1 && isOperator(char) && isOperator(text.charAt(i-1)))
       return "Operators must be seperated by a literal";
-    if (i > 1 && isOperator(char) && (text.charAt(i-1) == ' ' || text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && isOperator(text.charAt(i-2)))
+    if (i > 1 && isOperator(char) && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && isOperator(text.charAt(i-2)))
       return "Operators must be seperated by a literal";
   }
   //cannot have two operators at the top level
@@ -223,19 +221,19 @@ function createObject(text, counter, objs){
     var char = text.charAt(i);
     if (char == '(') {
       level++;
-      objs.push(newObj(char, null));
     }
     if (char == ')') {
       level--;
-      objs.push(newObj(char, null));
     }
     if (isOperator(char) && level == 0){
       var left = text.substring(0, i);
       var right = text.substring(i+1, text.length);
       // Set e2 as null first so obj has correct order
+      objs.push(newObj("(", null));
       express = {e1: createObject(left, counter+1, objs), e2: null, value: null, oper: char, depth: counter};
       objs.push(newObj(char, express));
       express.e2 = createObject(right, counter+1, objs);
+      objs.push(newObj(")", null));
       return express;
    }
   }
@@ -339,6 +337,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     if (input.err == "") {
       let objs = [];
       let expression = createObject(input.str, 0, objs);
+      objs = objs.slice(1, objs.length-1)
       if (idx == -1) { // If doesn"t exist, push new
         container.push({id: input.id, objs: objs, exp: expression});
       } else { // If does exist, edit
