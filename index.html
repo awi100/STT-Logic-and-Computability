@@ -36,8 +36,8 @@
       <section ng-if="inputMode">
         <div class="switch-container">
           <button class="switch" ng-click="task = 'Validity';" ng-class="{'active': task == 'Validity'}">Validity</button>
-          <button class="switch switch-middle" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
-          <button class="switch" ng-click="task = 'Tautology';" ng-class="{'active': task == 'Tautology'}">Tautology</button>
+          <button class="switch" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
+<!--           <button class="switch" ng-click="task = 'Tautology';" ng-class="{'active': task == 'Tautology'}">Tautology</button> -->
         </div>
         <div ng-repeat="input in premises" class="inputs">
           <input
@@ -57,7 +57,7 @@
         </div>
         <button class="btn btn-full" ng-click="addInput('premise')">Add Premise</button>
         <p class="label" ng-if="input.conclusion">Goals:</p>
-        <div ng-repeat="input in conclusions" class="inputs">
+        <div ng-repeat="input in conclusions" ng-if = "task == 'Validity'" class="inputs">
           <input
             id="{{'conclusion-' + input.id}}"
             class="input"
@@ -73,12 +73,12 @@
           <div class="btn input" ng-click="deleteInput(input, 'conclusion')">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>
         </div>
-        <button class="btn btn-full" ng-click="addInput('conclusion')">Add Conclusion</button>
+        <button class="btn btn-full" ng-if="task == 'Validity'" ng-click="addInput('conclusion')">Add Conclusion</button>
       </section>
       <section class="table" ng-if="!inputMode">
         <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
-            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': obj.exp == null}">
+            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking}">
               {{obj.str}}
             </div>
           </div>
