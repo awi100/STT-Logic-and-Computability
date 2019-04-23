@@ -274,6 +274,10 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.file = {data: null};
   $scope.modified = false;
   $scope.task = "Validity";
+  $scope.firstContradiction = null;
+  $scope.secondContradiction = null;
+  $scope.clickCountForContradiction = 0;
+  $scope.contraButtonClicked = false;
 
   function nextId() {
     $scope.idCounter++;
@@ -369,20 +373,44 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   }
 
+  $scope.processContradiction = () => {
+    $scope.contraButtonClicked = true;
+  }
+
   $scope.connect = (obj) => {
     if (obj.intangible && !$scope.linking) return; // If intangible, exit
-    if ($scope.linking) {
-      $scope.linking.val.link = obj;
-      $scope.verifyRule($scope.linking);
-      $scope.linking = null;
-    } else {
-      if ($scope.editing && $scope.editing != obj) {
-        $scope.editing.edit = false;
-        obj.edit = true;
-      } else {
-        obj.edit = !obj.edit;
+
+    if ($scope.contraButtonClicked){
+      if ($scope.clickCountForContradiction == 0){
+        $scope.firstContradiction = obj.exp;
+        $scope.clickCountForContradiction++;
       }
-      $scope.editing = obj.edit ? obj : null;
+      else if ($scope.clickCountForContradiction == 1){
+        $scope.secondContradiction = obj.exp;
+        $scope.clickCountForContradiction++;
+      }
+      if ($scope.clickCountForContradiction == 2){
+        showContradiction($scope.firstContradiction, $scope.secondContradiction);
+        $scope.clickCountForContradiction = 0;
+        $scope.firstContradiction = null;
+        $scope.secondContradiction = null;
+        $scope.contraButtonClicked = false;
+      }
+    }
+    else {
+      if ($scope.linking) {
+        $scope.linking.val.link = obj;
+        $scope.verifyRule($scope.linking);
+        $scope.linking = null;
+      } else {
+        if ($scope.editing && $scope.editing != obj) {
+          $scope.editing.edit = false;
+          obj.edit = true;
+        } else {
+          obj.edit = !obj.edit;
+        }
+        $scope.editing = obj.edit ? obj : null;
+      }
     }
   };
 
@@ -427,10 +455,11 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
-  $scope.showContradiction = (express1, express2) => {
+  function showContradiction(express1, express2) {
     //TODO contradiction checking
-    if (express1 == null || express2 == null)
+    if (express1 == null || express2 == null){
       return false;
+    }
     var e1isLit = isLiteral(express1), e2isLit = isLiteral(express2);
     if (!e1isLit && !e2isLit){
       return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2) || showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
@@ -442,14 +471,16 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       return showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
     }
     var sameLit = express1.e1 == express2.e1;
-    if (!sameLit)
+    if (!sameLit){
       return false;
+    }
     if (sameLit && express1.value != express2.value) {
-      // console.log("contradiction");
+      console.log("contradiction");
       return true;
     }
-    else
+    else{
       return false;
+    }
   };
 
   $scope.verifyRule = (obj) => {
