@@ -162,6 +162,7 @@ bottom:0;
 }
 
 .table {
+width: 100%;
 display:table;
 }
 
@@ -208,4 +209,17 @@ border:1px solid #000;
 
 .switch:hover,.obj:hover,.obj.edit,.value.edit {
 background-color:#DDD;
+}
+
+.button-container {
+  display: flex;
+}
+
+.button-container .btn {
+  flex: 1 0 80%;
+}
+
+.button-container .label {
+  margin: 0;
+  padding: 2vh;
 }

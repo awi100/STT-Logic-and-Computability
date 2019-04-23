@@ -75,7 +75,10 @@
         <button class="btn btn-full" ng-if="task == 'Validity'" ng-click="addInput('conclusion')">Add Conclusion</button>
       </section>
       <section class="table" ng-if="!inputMode">
-        <button class="btn btn-full" ng-click="processContradiction()">Show Contradiction</button>
+        <div class="button-container">
+          <button class="btn" ng-click="processContradiction()">Show Contradiction</button>
+          <p class="label" ng-class="{'unknown': contradiction.val == null, 'invalid': contradiction.val === false, 'valid': contradiction.val}">{{(contradiction.val) ? "✔" : "✖"}}</p>
+        </div>
         <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
             <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': (obj.intangible && !linking)}">
