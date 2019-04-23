@@ -38,9 +38,9 @@
           <button class="switch" ng-click="task = 'Validity';" ng-class="{'active': task == 'Validity'}">Validity</button>
           <button class="switch" ng-click="task = 'Consistency';" ng-class="{'active': task == 'Consistency'}">Consistency</button>
         </div>
-        <div ng-repeat="input in premises" class="inputs">
+        <div ng-repeat="input in inputs.slice(0, numPremises)" class="inputs">
           <input
-            id="{{'premise-' + input.id}}"
+            id="{{'input-' + input.id}}"
             class="input"
             type="text"
             placeholder="Premise"
@@ -56,9 +56,9 @@
         </div>
         <button class="btn btn-full" ng-click="addInput('premise')">Add Premise</button>
         <p class="label" ng-if="input.conclusion">Goals:</p>
-        <div ng-repeat="input in conclusions" ng-if = "task == 'Validity'" class="inputs">
+        <div ng-repeat="input in inputs.slice(numPremises)" ng-if = "task == 'Validity'" class="inputs">
           <input
-            id="{{'conclusion-' + input.id}}"
+            id="{{'input-' + input.id}}"
             class="input"
             type="text"
             placeholder="Conclusion"
