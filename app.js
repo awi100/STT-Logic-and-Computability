@@ -179,7 +179,7 @@ function newObj(str, exp, intangible) {
   return {str: str, exp: exp, intangible: intangible, val: {num: null, rule: "", link: null, valid: null}, edit: false}
 }
 
-function createObject(text, counter, objs){
+function createObject(text, counter, objs) {
   text = text.replace(/ /g,''); //remove whitespace
   //for consistency
   text = text.toUpperCase()
@@ -331,6 +331,8 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       if (i.id > input.id) i.id -= 1;
     });
     counter -= 1;
+    expressions.splice(idx, 1);
+    $scope.expressions = combine($scope.expPremises, $scope.expConclusions);
   };
 
   function combine(o1, o2) {
@@ -343,13 +345,21 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   }
 
   $scope.validateInput = (input, type) => {
-    let container = (type == "premise") ? $scope.expPremises : $scope.expConclusions;
+    let container;
+    if (type == "premise") {
+      container = $scope.expPremises;
+    } else {
+      container = $scope.expConclusions;
+      input.id -= $scope.idCounterPremise;
+      console.log(input)
+    }
     let idx = container.map(function(exp) { return exp.id; }).indexOf(input.id);
     input.err = validateInput(input.str);
     // If valid, add to expressions
     if (input.err == "") {
       let objs = [];
       let expression = createObject(input.str, 0, objs);
+      // Remove extra parens around expressions
       if (objs.length > 2) objs = objs.slice(1, objs.length-1);
       if (idx == -1) { // If doesn"t exist, push new
         container.push({id: input.id, objs: objs, exp: expression});
@@ -420,7 +430,8 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       e.objs.forEach((o) => {
         if (o.exp == e.exp) {
           o.intangible = true;
-          o.exp.oper = temp;
+          o.exp.oper = topLevel;
+          o.val.valid = true;
         } else {
           o.intangible = false;
         }
@@ -432,14 +443,15 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       e.objs.forEach((o) => {
         if (o.exp == e.exp) {
           o.intangible = true;
-          o.exp.oper = temp;
+          o.exp.oper = topLevel;
+          o.val.valid = true;
         } else {
           o.intangible = false;
         }
       });
     });
-    $scope.expressions = combine($scope.expPremises, $scope.expConclusions)
-  }
+    $scope.expressions = combine($scope.expPremises, $scope.expConclusions);
+  };
 
   $scope.showContradiction = (express1, express2) => {
     //TODO contradiction checking
@@ -458,13 +470,13 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     var sameLit = express1.e1 == express2.e1;
     if (!sameLit)
       return false;
-    if (sameLit && express1.value != express2.value){
+    if (sameLit && express1.value != express2.value) {
       // console.log("contradiction");
       return true;
     }
     else
       return false;
-  }
+  };
 
   $scope.verifyRule = (obj) => {
     if (!$scope.linking) {
