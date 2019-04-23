@@ -350,9 +350,10 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       container = $scope.expPremises;
     } else {
       container = $scope.expConclusions;
-      input.id -= $scope.idCounterPremise;
+      input.id -= ($scope.idCounterPremise - 1);
       console.log(input)
     }
+    console.log(container)
     let idx = container.map(function(exp) { return exp.id; }).indexOf(input.id);
     input.err = validateInput(input.str);
     // If valid, add to expressions
@@ -383,7 +384,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   }
 
   $scope.connect = (obj) => {
-    if (obj.intangible) return; // If intangible, exit
+    if (obj.intangible && !$scope.linking) return; // If intangible, exit
     if ($scope.linking) {
       $scope.linking.val.link = obj;
       $scope.verifyRule($scope.linking);

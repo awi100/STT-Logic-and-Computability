@@ -78,7 +78,7 @@
         <button class="btn btn-full" ng-click="showContradiction()">Show Contradiction</button>
         <div class="inline" ng-repeat="expression in expressions">
           <div class="trow expression">
-            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': obj.intangible}">
+            <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': (obj.intangible && !linking)}">
               {{obj.str}}
             </div>
           </div>
