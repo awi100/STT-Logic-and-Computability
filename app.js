@@ -507,7 +507,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     for (let i=0; i<$scope.expressions.length; i++) {
       let e = $scope.expressions[i];
       if (e.exp) {
-        e.exp.value = (i<$scope.numPremises) ? true : false;;
+        e.exp.value = (i<$scope.numPremises) ? true : false;
         topLevel = e.exp;
         e.objs.forEach((o) => {
           if (o.exp == e.exp) {
@@ -554,6 +554,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       obj.val.valid = null;
       obj.val.link = null;
     } else {
+      if (!obj.val.link.val.valid) return false;
       switch (obj.val.rule) {
         case "":
           obj.val.valid = null;
