@@ -86,6 +86,19 @@ function biconditional(express){
     return (express.e1.value == true && express.e2.value == false) || (express.e1.value == false && express.e2.value == true);
 }
 
+function negation(express){
+    console.log(express);
+    return false;
+    // if (express == null || express.oper == null) return false;
+    // if (express.oper != '~') return negate(express.e1) || negate(express.e2);
+    // if (express.value == true){
+    //   return express.e1 != null && express.e1.value == false;
+    // }
+    // if (express.value == false){
+    //   return express.e1 != null && express.e1.value == true; 
+    // }
+  }
+
 //function to check if there are parens around the
 //expression that are serving no purpose
 function checkUselessParens(text){
@@ -133,7 +146,8 @@ function checkValidAlphabet(text){
 function validateInput(text){
   text = text.replace(/ /g,''); //remove whitespace
   if (checkValidAlphabet(text) == false) return "Characters used not in valid alphabet";
-  var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false;
+  var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false, 
+      litCount = 0, operCount = 0, isOper = false, isLit = false;
   for (i = 0; i < text.length; i++){
     var char = text.charAt(i);
     var charCode = text.charCodeAt(i);
@@ -154,23 +168,33 @@ function validateInput(text){
       numOfZeroDepths++;
     //check for another operator appearing on level 0
 
+    isOper = isOperator(char);
+    isLit = (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
+
+    if (isOper) operCount++;
+    if (isLit) litCount++; 
     //check for literals longer than 1 char
-    if(i > 0 && charIsLiteral(char) && charIsLiteral(text.charAt(i-1)))
+    if(i > 0 && isLit && charIsLiteral(text.charAt(i-1)))
       return "Literals must be length 1";
     //check that chars are seperated with operator
-    if (i > 1 && charIsLiteral(char) && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && charIsLiteral(text.charAt(i-2)))
+    if (i > 1 && isLit && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && charIsLiteral(text.charAt(i-2)))
       return "Literals must be seperated by an operator";
     //check that operators are seperated with a literal
-    if (i > 1 && isOperator(char) && isOperator(text.charAt(i-1)))
+    if (i > 1 && isOper && isOperator(text.charAt(i-1)))
       return "Operators must be seperated by a literal";
-    if (i > 1 && isOperator(char) && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && isOperator(text.charAt(i-2)))
+    if (i > 1 && isOper && (text.charAt(i-1) == '(' || text.charAt(i-1) == ')') && isOperator(text.charAt(i-2)))
       return "Operators must be seperated by a literal";
   }
   //cannot have two operators at the top level
   if (numOfZeroDepths > 1 && containsParens) return "Only 1 main operator allowed.";
   //cannot have a different # of left than right parens
   if (level != 0) return "Uneven number of open and closed parens.";
-
+  //cannot have the same # of literals and operators;
+  if (operCount+1 != litCount) {
+    console.log(operCount);
+    console.log(litCount);
+    return "Incorrect number of operators or literals";
+  }
   return "";
 }
 
@@ -445,7 +469,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       e.objs.forEach((o) => {
         if (o.exp == e.exp) {
           o.intangible = true;
-          o.exp.oper = topLevel;
           o.val.valid = true;
         } else {
           o.intangible = false;
@@ -507,7 +530,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           obj.val.valid = biconditional(obj.val.link.exp);
           break;
         case "neg":
-          // obj.val.valid = negation(obj.val.link.exp);
+          obj.val.valid = negation(obj.val.link.exp);
           break;
         default:
           obj.val.valid = null;
