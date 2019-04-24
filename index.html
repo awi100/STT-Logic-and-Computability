@@ -28,7 +28,7 @@
       <p ng-show="importStatus">{{importStatus}}</p>
       <p class="detail">BramHub 2019: Andrew Imrie, Maya Tung</p>
     </aside>
-    <main>
+    <main ng-click="disconnect($event)">
       <div class="switch-container">
         <button class="switch" ng-click="inputMode = true;" ng-class="{'active': inputMode}">Input</button>
         <button class="switch" ng-click="inputMode = false; initValues();" ng-class="{'active': !inputMode}">Table</button>
@@ -43,7 +43,7 @@
             id="{{'input-' + input.id}}"
             class="input"
             type="text"
-            placeholder="Premise"
+            placeholder="{{(task=='Validity') ? 'Premise' : 'Expression'}}"
             value=""
             ng-model="input.str"
             ng-keypress="enterInput($event, 'premise')"
@@ -54,7 +54,7 @@
           <div class="btn input" ng-click="deleteInput(input, 'premise')">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>
         </div>
-        <button class="btn btn-full" ng-click="addInput('premise')">Add Premise</button>
+        <button class="btn btn-full" ng-click="addInput('premise')">{{(task=='Validity') ? 'Add Premise' : 'Add Expression'}}</button>
         <p class="label" ng-if="input.conclusion">Goals:</p>
         <div ng-repeat="input in inputs.slice(numPremises)" ng-if = "task == 'Validity'" class="inputs">
           <input
@@ -79,13 +79,13 @@
           <button class="btn" ng-click="processContradiction()">Show Contradiction</button>
           <p class="label" ng-class="{'unknown': contradiction.val == null, 'invalid': contradiction.val === false, 'valid': contradiction.val}">{{(contradiction.val) ? "✔" : "✖"}}</p>
         </div>
-        <div class="inline" ng-repeat="expression in expressions">
-          <div class="trow expression">
+        <div class="expressions" ng-repeat="expression in expressions">
+          <div class="trow expression connectable" ng-if="expression.exp != null">
             <div class="tcell obj" ng-repeat="obj in expression.objs" ng-click="connect(obj)" ng-class="{'edit': obj.edit, 'link': linking, 'intangible': (obj.intangible && !linking)}">
               {{obj.str}}
             </div>
           </div>
-          <div class="trow value">
+          <div class="trow value connectable">
             <div class="tcell value"
                  ng-repeat="obj in expression.objs"
                  ng-click="connect(obj)"
@@ -93,7 +93,7 @@
               {{getValString(obj.exp.value)}}<sub>{{obj.val.num}}</sub>
             </div>
           </div>
-          <div class="trow edit" ng-if="editing">
+          <div class="trow edit connectable" ng-if="editing">
             <div class="tcell" ng-repeat="obj in expression.objs">
               <div class="switch-container" ng-show="obj.edit">
                 <div class="switch" ng-click="setObjVal(obj, 'T')" ng-class="{'active': obj.exp.value == true}">T</div>

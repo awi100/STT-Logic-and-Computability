@@ -177,6 +177,7 @@ text-align:center;
 
 .tcell .switch {
 border-bottom: none;
+padding:1vh!important;
 }
 
 .expression .tcell,.value .tcell {
@@ -213,6 +214,7 @@ background-color:#DDD;
 
 .button-container {
   display: flex;
+  margin-bottom: 3vh;
 }
 
 .button-container .btn {

@@ -29,7 +29,6 @@ function reit(express1, express2){
 }
 
 function and(express){
-  console.log(express);
   if (express.value == null || express.oper != '&'){
     return false;
   }
@@ -44,7 +43,6 @@ function and(express){
 }
 
 function andOperator(express){
-  console.log(express);
   if (express.value == null || express.oper != '&')
     return false;
   if (express.value == true){
@@ -100,7 +98,6 @@ function biconditional(express){
 }
 
 function negation(express){
-    console.log(express);
     return false;
     // if (express == null || express.oper == null) return false;
     // if (express.oper != '~') return negate(express.e1) || negate(express.e2);
@@ -108,7 +105,7 @@ function negation(express){
     //   return express.e1 != null && express.e1.value == false;
     // }
     // if (express.value == false){
-    //   return express.e1 != null && express.e1.value == true; 
+    //   return express.e1 != null && express.e1.value == true;
     // }
   }
 
@@ -159,7 +156,7 @@ function checkValidAlphabet(text){
 function validateInput(text){
   text = text.replace(/ /g,''); //remove whitespace
   if (checkValidAlphabet(text) == false) return "Characters used not in valid alphabet";
-  var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false, 
+  var level = 0, i = 0, numOfZeroDepths = 0, containsParens = false, anotherOperatorAppeared = false,
       litCount = 0, operCount = 0, isOper = false, isLit = false;
   for (i = 0; i < text.length; i++){
     var char = text.charAt(i);
@@ -185,7 +182,7 @@ function validateInput(text){
     isLit = (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
 
     if (isOper) operCount++;
-    if (isLit) litCount++; 
+    if (isLit) litCount++;
     //check for literals longer than 1 char
     if(i > 0 && isLit && charIsLiteral(text.charAt(i-1)))
       return "Literals must be length 1";
@@ -303,21 +300,14 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.inputMode = true;
   $scope.numPremises = 1;
   $scope.inputs = [{id: 0, str: "", err: ""}, {id: 1, str: "", err: ""}];
-  $scope.idCounter = 1;
-  $scope.expressions = [];
+  $scope.expressions = [{id: 0, objs: null, exp: null}, {id: 1, objs: null, exp: null}];
   $scope.stepCounter = 0;
   $scope.file = {data: null};
   $scope.modified = false;
   $scope.task = "Validity";
   $scope.contradiction = { e1: null, e2: null, count: 0, linking: false, val: null };
 
-  function nextId() {
-    $scope.idCounter++;
-    return $scope.idCounter;
-  }
-
   $scope.addInput = (type) => {
-    let id = nextId();
     // If conclusion, push to end
     let idx = $scope.inputs.length;
     // If premise, insert in middle
@@ -325,8 +315,16 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       idx = $scope.numPremises;
       $scope.numPremises++;
     }
-    console.log($scope.inputs)
-    $scope.inputs.splice(idx, 0, {id: id, str: "", err: ""});
+    $scope.inputs.splice(idx, 0, {id: null, str: "", err: ""});
+    $scope.expressions.splice(idx, 0, {id: null, objs: null, exp: null});
+    // Set numerical IDs
+    let id;
+    for (let i=0; i<$scope.inputs.length; i++) {
+      let oldID = $scope.inputs[i].id;
+      if (oldID == null) id = i;
+      $scope.inputs[i].id = i;
+      $scope.expressions[i].id = i;
+    }
     $timeout(() => {
       document.getElementById("input-" + id).focus();
     });
@@ -385,15 +383,16 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       let expression = createObject(input.str, 0, objs);
       // Remove extra parens around expressions
       if (objs.length > 2) objs = objs.slice(1, objs.length-1);
-      if (idx == -1) { // If doesn"t exist, push new
-        $scope.expressions.push({id: input.id, objs: objs, exp: expression});
-      } else { // If does exist, edit
-        cleanStepCounter($scope.expressions[idx].objs);
+      if (idx != -1) {
         $scope.expressions[idx].exp = expression;
         $scope.expressions[idx].objs = objs;
+        cleanStepCounter($scope.expressions[idx].objs);
+      } else {
+        console.error("Expression input desync: Fatal error");
       }
     } else if (idx != -1) { // Remove, if invalidated
-      $scope.expressions.splice(idx, 1);
+      $scope.expressions[idx].exp = null;
+      $scope.expressions[idx].objs = null;
     }
   };
 
@@ -448,7 +447,28 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
+  // Disconnect from object, if click on canvas
+  $scope.disconnect = (e) => {
+    // Iterate over parent elements and if one is expressions, we aren't clicking on canvas
+    let element = e.target;
+    while (element != null) {
+      if (element.classList.contains("connectable")) return;
+      element = element.parentElement;
+    }
+    // Set edit to false
+    if ($scope.editing) $scope.editing.edit = false;
+    e.stopPropagation();
+  };
+
   $scope.setObjVal = (obj, val) => {
+    // Check to see if value is different
+    if (obj.exp.value && val == "T" || obj.exp.value === false && val == "F" || obj.exp.value == null && val == null) {
+      return;
+    }
+    // Reset to default values
+    obj.val.rule = "";
+    obj.val.link = null;
+    obj.val.valid = null;
     // If setting to null, work steps backwards
     if (obj.exp.value != null && !val) {
       $scope.expressions.forEach((e) => {
@@ -470,21 +490,34 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       obj.exp.value = null;
       obj.val.num = null;
     }
+    // Find dependent steps and re-eval rule
+    $scope.expressions.forEach((e) => {
+      if (e.objs) {
+        e.objs.forEach((o) => {
+          if (o.val.link == obj) {
+            $scope.linking = true;
+            $scope.verifyRule(o);
+          }
+        });
+      }
+    });
   };
 
   $scope.initValues = () => {
     for (let i=0; i<$scope.expressions.length; i++) {
       let e = $scope.expressions[i];
-      e.exp.value = (i<$scope.numPremises) ? true : false;;
-      topLevel = e.exp;
-      e.objs.forEach((o) => {
-        if (o.exp == e.exp) {
-          o.intangible = true;
-          o.val.valid = true;
-        } else {
-          o.intangible = false;
-        }
-      });
+      if (e.exp) {
+        e.exp.value = (i<$scope.numPremises) ? true : false;;
+        topLevel = e.exp;
+        e.objs.forEach((o) => {
+          if (o.exp == e.exp) {
+            o.intangible = true;
+            o.val.valid = true;
+          } else {
+            o.intangible = false;
+          }
+        });
+      }
     }
   };
 
