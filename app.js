@@ -29,6 +29,7 @@ function reit(express1, express2){
 }
 
 function and(express){
+  console.log(express);
   if (express.value == null || express.oper != '&'){
     return false;
   }
@@ -42,15 +43,27 @@ function and(express){
   }
 }
 
+function andOperator(express){
+  console.log(express);
+  if (express.value == null || express.oper != '&')
+    return false;
+  if (express.value == true){
+    return express.e1.value == true && express.e2.value == true;
+  }
+  else
+    return express.e1.value == false || express.e2.value == false;
+
+}
+
 function or(express){
-  if (express.value == null || express.oper != '|' || express.e1.value == null || express.e2.value == null){
+  if (express.value == null || express.oper != '|' || (express.e1.value == null && express.e2.value == null)){
     return false;
   }
   if (express.value == true){
-    return express.e1.value == true || express.e2.value == true;
+    return (express.e1.value != null || express.e2.value != null) && (express.e1.value == true || express.e2.value == true);
   }
   else{
-    return express.e1.value == false && express.e2.value == false;
+    return (express.e1.value != null || express.e2.value != null) && (express.e1.value == false && express.e2.value == false);
   }
 }
 
@@ -191,8 +204,6 @@ function validateInput(text){
   if (level != 0) return "Uneven number of open and closed parens.";
   //cannot have the same # of literals and operators;
   if (operCount+1 != litCount) {
-    console.log(operCount);
-    console.log(litCount);
     return "Incorrect number of operators or literals";
   }
   return "";
@@ -429,7 +440,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         if ($scope.editing && $scope.editing != obj) {
           $scope.editing.edit = false;
           obj.edit = true;
-        } else {
+         } else {
           obj.edit = !obj.edit;
         }
         $scope.editing = obj.edit ? obj : null;
@@ -531,6 +542,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           break;
         case "neg":
           obj.val.valid = negation(obj.val.link.exp);
+          break;
+        case "andOp":
+          obj.val.valid = andOperator(obj.val.link.exp);
           break;
         default:
           obj.val.valid = null;
