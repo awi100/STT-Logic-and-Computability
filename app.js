@@ -261,15 +261,20 @@ function createObject(text, counter, objs) {
   }
   //find the 0 level operator and recurse
   var level = 0;
-  for (i = 0; i < text.length; i++){
+  for (i = 0; i < text.length; i++) {
     var char = text.charAt(i);
-    if (char == '(') {
-      level++;
-    }
-    if (char == ')') {
-      level--;
-    }
-    if (isOperator(char) && level == 0){
+    if (char == '(') level++;
+    if (char == ')') level--;
+    if (char == '~' && level == 0) {
+      var right = text.substring(i+1, text.length);
+      objs.push(newObj("(", null, true));
+      let idx = objs.length;
+      objs.push(newObj(char, null, false));
+      express = {e1: createObject(right, counter+1, objs), e2: null, value: null, oper: '~', depth: counter};
+      objs[idx].exp = express;
+      objs.push(newObj(")", null, true));
+      return express;
+    } else if (isOperator(char) && level == 0) {
       var left = text.substring(0, i);
       var right = text.substring(i+1, text.length);
       // Set e2 as null first so obj has correct order
@@ -279,7 +284,7 @@ function createObject(text, counter, objs) {
       express.e2 = createObject(right, counter+1, objs);
       objs.push(newObj(")", null, true));
       return express;
-   }
+    }
   }
 }
 
@@ -599,14 +604,19 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   };
 
   $scope.export = () => {
-    let filename = "stt.bram";
+    let filename = "save.stt";
     let save = {
       editing: $scope.editing,
+      linking: $scope.linking,
       inputMode: $scope.inputMode,
-      premises: $scope.premises,
-      idCounter: $scope.idCounter,
+      numPremises: $scope.numPremises,
+      inputs: $scope.inputs,
       expressions: $scope.expressions,
-      stepCounter: $scope.stepCounter
+      stepCounter: $scope.stepCounter,
+      file: $scope.file,
+      modified: $scope.modified,
+      task: $scope.task,
+      contradiction: $scope.contradiction
     }
     let blob = new Blob([angular.toJson(save, true)], {type: "text/plain;charset=utf-8"});
     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
@@ -623,17 +633,30 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
+  // Source https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
+  function b64DecodeUnicode(str) {
+    // Going backwards: from bytestream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  }
+
   $scope.import = () => {
     $scope.importStatus = "Loading... ";
+    console.log($scope.file.data)
     let header = $scope.file.data.indexOf(";base64,");
-    let json = JSON.parse(atob($scope.file.data.substring(header+8)));
+    let json = JSON.parse(b64DecodeUnicode($scope.file.data.substring(header+8)));
     $scope.editing = json.editing;
+    $scope.linking = json.linking;
     $scope.inputMode = json.inputMode;
-    $scope.premises = json.inputs;
-    $scope.idCounter = json.idCounter;
+    $scope.numPremises = json.numPremises;
+    $scope.inputs = json.inputs;
     $scope.expressions = json.expressions;
     $scope.stepCounter = json.stepCounter;
+    $scope.file = json.file;
     $scope.modified = json.modified;
+    $scope.task = json.task;
+    $scope.contradiction = json.contradiction;
     $scope.importStatus = "";
   };
 
@@ -646,6 +669,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   }
 }]);
 
+// Derivative of: https://stackoverflow.com/questions/18839048/how-to-read-a-file-in-angularjs
 app.directive("fileSelect", ["$window", function ($window) {
   return {
     restrict: "A",
@@ -677,10 +701,10 @@ app.directive("fileSelect", ["$window", function ($window) {
 
       el.bind("change", function (e) {
         let fileName = e.target.files[0];
-        if (fileType === "bram") {
-          fileReader.readAsText(fileName);
+        if (fileType === "stt") {
+          fileReader.readAsText(fileName, "utf-8");
         } else if (fileType === "data") {
-          fileReader.readAsDataURL(fileName);
+          fileReader.readAsDataURL(fileName, "utf-8");
         }
       });
     }
