@@ -54,7 +54,19 @@ function andOperator(express){
 }
 
 function or(express){
-  if (express.value == null || express.oper != '|' || (express.e1.value == null && express.e2.value == null)){
+  if (express.value == null || express.oper != '|'){
+    return false;
+  }
+  if (express.value == true){
+    return (express.e1.value == true && express.e2.value != null) || (express.e2.value == true && express.e1.value != null) ;
+  }
+  else{
+    return (express.e1.value == false && express.e2.value != true) || (express.e2.value == false && express.e1.value != true);
+  }
+}
+
+function orOperator(express){
+  if (express.value == null || express.oper != '|'){
     return false;
   }
   if (express.value == true){
@@ -98,15 +110,14 @@ function biconditional(express){
 }
 
 function negation(express){
-    return false;
-    // if (express == null || express.oper == null) return false;
-    // if (express.oper != '~') return negate(express.e1) || negate(express.e2);
-    // if (express.value == true){
-    //   return express.e1 != null && express.e1.value == false;
-    // }
-    // if (express.value == false){
-    //   return express.e1 != null && express.e1.value == true;
-    // }
+    if (express == null || express.oper == null) return false;
+    if (express.oper != '~') return negate(express.e1) || negate(express.e2);
+    if (express.value == true){
+      return express.e1 != null && express.e1.value == false;
+    }
+    if (express.value == false){
+      return express.e1 != null && express.e1.value == true;
+    }
   }
 
 //function to check if there are parens around the
@@ -471,11 +482,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     // If setting to null, work steps backwards
     if (obj.exp.value != null && !val) {
       $scope.expressions.forEach((e) => {
-        if (e.objs) {
-          e.objs.forEach((o) => {
-            if (o.val.num > obj.val.num) o.val.num -= 1;
-          });
-        }
+        e.objs.forEach((o) => {
+          if (o.val.num > obj.val.num) o.val.num -= 1;
+        });
       });
       $scope.stepCounter--;
     } else if (obj.exp.value == null && val) {
@@ -579,6 +588,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           break;
         case "andOp":
           obj.val.valid = andOperator(obj.val.link.exp);
+          break;
+        case "orOp":
+          obj.val.valid = orOperator(obj.val.link.exp);
           break;
         default:
           obj.val.valid = null;
