@@ -471,9 +471,11 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     // If setting to null, work steps backwards
     if (obj.exp.value != null && !val) {
       $scope.expressions.forEach((e) => {
-        e.objs.forEach((o) => {
-          if (o.val.num > obj.val.num) o.val.num -= 1;
-        });
+        if (e.objs) {
+          e.objs.forEach((o) => {
+            if (o.val.num > obj.val.num) o.val.num -= 1;
+          });
+        }
       });
       $scope.stepCounter--;
     } else if (obj.exp.value == null && val) {
