@@ -237,7 +237,7 @@ function createObject(text, counter, objs) {
     var myLit = {e1: lit, e2: null, value: null, oper: null, depth: counter+1};
     express = {e1: myLit, e2: null, value: null, oper: neg, depth: counter};
     objs.push(newObj(neg, express, false));
-    objs.push(newObj(lit, express, false));
+    objs.push(newObj(lit, myLit, false));
     return express;
   }
   //calculate the max depth level
@@ -320,8 +320,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     // Set numerical IDs
     let id;
     for (let i=0; i<$scope.inputs.length; i++) {
-      let oldID = $scope.inputs[i].id;
-      if (oldID == null) id = i;
+      if ($scope.inputs[i].id == null) id = i;
       $scope.inputs[i].id = i;
       $scope.expressions[i].id = i;
     }
@@ -355,7 +354,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.deleteInput = (input, type) => {
     let idx = $scope.inputs.indexOf(input);
     idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
-    cleanStepCounter($scope.expressions[idx].objs);
+    if ($scope.expressions[idx].objs) cleanStepCounter($scope.expressions[idx].objs);
     $scope.inputs.forEach((i) => {
       if (i.id > input.id) i.id -= 1;
     });
@@ -390,7 +389,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       } else {
         console.error("Expression input desync: Fatal error");
       }
-    } else if (idx != -1) { // Remove, if invalidated
+    } else if (idx != -1) { // Make invis, if invalidated
       $scope.expressions[idx].exp = null;
       $scope.expressions[idx].objs = null;
     }
@@ -508,7 +507,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       let e = $scope.expressions[i];
       if (e.exp) {
         e.exp.value = (i<$scope.numPremises) ? true : false;
-        topLevel = e.exp;
         e.objs.forEach((o) => {
           if (o.exp == e.exp) {
             o.intangible = true;
