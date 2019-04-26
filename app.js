@@ -219,7 +219,7 @@ function validateInput(text){
 
 function newObj(str, exp, intangible) {
   if (str in inputMap) str = inputMap[str];
-  return {str: str, exp: exp, intangible: intangible, val: {num: null, rule: "", link: null, valid: null}, edit: false}
+  return {str: str, exp: exp, intangible: intangible, val: {bool: "", num: null, rule: "", link: null, valid: null}, edit: false}
 }
 
 function createObject(text, counter, objs) {
@@ -240,15 +240,6 @@ function createObject(text, counter, objs) {
   if (text.length == 1){
     express = {e1: text, e2: null, value: null, oper: null, depth: counter};
     objs.push(newObj(text, express, false));
-    return express;
-  }
-  if (text.length == 2){
-    var neg = text.charAt(0);
-    var lit = text.charAt(1);
-    var myLit = {e1: lit, e2: null, value: null, oper: null, depth: counter+1};
-    express = {e1: myLit, e2: null, value: null, oper: neg, depth: counter};
-    objs.push(newObj(neg, express, false));
-    objs.push(newObj(lit, myLit, false));
     return express;
   }
   //calculate the max depth level
@@ -411,6 +402,14 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
+  $scope.getContraString = (val) => {
+    if (val == null) {
+      return "?";
+    } else {
+      return (val) ? "✔" : "✖";
+    }
+  };
+
   $scope.getValString = (val) => {
     if (val == null) {
       return "";
@@ -477,32 +476,30 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
 
   $scope.setObjVal = (obj, val) => {
     // Check to see if value is different
-    if (obj.exp.value && val == "T" || obj.exp.value === false && val == "F" || obj.exp.value == null && val == null) {
-      return;
-    }
+    if (obj.val.bool == val) return;
     // Reset to default values
     obj.val.rule = "";
     obj.val.link = null;
     obj.val.valid = null;
     // If setting to null, work steps backwards
-    if (obj.exp.value != null && !val) {
+    if (obj.val.bool != "" && !val) {
       $scope.expressions.forEach((e) => {
         e.objs.forEach((o) => {
           if (o.val.num > obj.val.num) o.val.num -= 1;
         });
       });
       $scope.stepCounter--;
-    } else if (obj.exp.value == null && val) {
+    } else if (obj.val.bool == "" && val) {
       $scope.stepCounter++;
     }
     // Set to bool
     if (val) {
-      obj.exp.value = (val == "T");
+      obj.val.bool = val;
       // Increment step iff was not already set to bool
       if (obj.val.num == null) obj.val.num = $scope.stepCounter;
     } else {
       // Set to empty
-      obj.exp.value = null;
+      obj.val.bool = "";
       obj.val.num = null;
     }
     // Find dependent steps and re-eval rule
@@ -527,8 +524,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           if (o.exp == e.exp) {
             o.intangible = true;
             o.val.valid = true;
-          } else {
-            o.intangible = false;
+            o.val.bool = (e.exp.value) ? "T" : "F";
           }
         });
       }
@@ -600,6 +596,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         default:
           obj.val.valid = null;
       }
+      if (obj.val.valid) {
+        obj.exp.value = (obj.val.bool == "T");
+      }
     }
   };
 
@@ -643,7 +642,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
 
   $scope.import = () => {
     $scope.importStatus = "Loading... ";
-    console.log($scope.file.data)
     let header = $scope.file.data.indexOf(";base64,");
     let json = JSON.parse(b64DecodeUnicode($scope.file.data.substring(header+8)));
     $scope.editing = json.editing;

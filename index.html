@@ -77,7 +77,7 @@
       <section class="table" ng-if="!inputMode">
         <div class="button-container">
           <button class="btn" ng-click="processContradiction()">Show Contradiction</button>
-          <p class="label" ng-class="{'unknown': contradiction.val == null, 'invalid': contradiction.val === false, 'valid': contradiction.val}">{{(contradiction.val) ? "✔" : "✖"}}</p>
+          <p class="label" ng-class="{'unknown': contradiction.val == null, 'invalid': contradiction.val === false, 'valid': contradiction.val}">{{getContraString(contradiction.val)}}</p>
         </div>
         <div class="expressions" ng-repeat="expression in expressions">
           <div class="trow expression connectable" ng-if="expression.exp != null">
@@ -89,16 +89,16 @@
             <div class="tcell value"
                  ng-repeat="obj in expression.objs"
                  ng-click="connect(obj)"
-                 ng-class="{'unknown': obj.exp.value != null && obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}">
-              {{getValString(obj.exp.value)}}<sub>{{obj.val.num}}</sub>
+                 ng-class="{'unknown': obj.val.bool != '' && obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}">
+              {{obj.val.bool}}<sub>{{obj.val.num}}</sub>
             </div>
           </div>
           <div class="trow edit connectable" ng-if="editing">
             <div class="tcell" ng-repeat="obj in expression.objs">
               <div class="switch-container" ng-show="obj.edit">
-                <div class="switch" ng-click="setObjVal(obj, 'T')" ng-class="{'active': obj.exp.value == true}">T</div>
-                <div class="switch switch-middle" ng-click="setObjVal(obj, null)" ng-class="{'active': obj.exp.value == null}"></div>
-                <div class="switch" ng-click="setObjVal(obj, 'F')" ng-class="{'active': obj.exp.value == false}">F</div>
+                <div class="switch" ng-click="setObjVal(obj, 'T')" ng-class="{'active': obj.val.bool == 'T'}">T</div>
+                <div class="switch switch-middle" ng-click="setObjVal(obj, null)" ng-class="{'active': obj.val.bool == ''}"></div>
+                <div class="switch" ng-click="setObjVal(obj, 'F')" ng-class="{'active': obj.val.bool == 'F'}">F</div>
               </div>
               <select class="rule" ng-model="obj.val.rule" ng-change="verifyRule(obj)" ng-class="{'linking': linking, 'unkown': obj.val.valid == null, 'invalid': obj.val.valid === false, 'valid': obj.val.valid}" ng-show="obj.edit">
                 <option value="">Select Rule</option>
