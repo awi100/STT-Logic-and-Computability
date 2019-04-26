@@ -38,12 +38,11 @@ function and(express){
             (express.e1.value == null && express.e2.value == true) ;
   }
   else{
-    return express.e1.value == false || express.e2.value == false;
+    return (express.e1.value == false && express.e2.value != null) || (express.e2.value == false && express.e1.value != null);
   }
 }
 
 function andOperator(express){
-  console.log(express);
   if (express.oper != '&')
     return false;
   if (express.value == true){
@@ -55,7 +54,6 @@ function andOperator(express){
 }
 
 function or(express, expressBeingSet){
-  console.log(express);
   if (express.value == null || express.oper != '|'){
     return false;
   }
@@ -92,7 +90,6 @@ function orOperator(express){
 }
 
 function implication(express){
-  //console.log(express);
   if (express.value == null || express.oper != '$')
     return false;
   if (express.value == true){
@@ -109,7 +106,6 @@ function implication(express){
       return false;
   }
   else{
-    //console.log(express);
     //for a false implication
     //if antecedent is true, consequence must be false
     //else antecedent is false, whole expression is false
@@ -153,6 +149,15 @@ function negation(express){
       return express.e1 != null && express.e1.value == true;
     }
   }
+
+function negationOperator(express){
+  if (express.oper != '~')
+    return false;
+  if (express.value == true)
+    return express.e1.value == false;
+  else if (express.value == false)
+    return express.e1.value == true;
+}
 
 //function to check if there are parens around the
 //expression that are serving no purpose
@@ -593,7 +598,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
 
   $scope.verifyRule = (obj) => {
     if (!$scope.linking) {
-      if (obj.val.rule != "andOp" && obj.val.rule != "orOp" && obj.val.rule != "impOp"){
+      if (obj.val.rule != "andOp" && obj.val.rule != "orOp" && obj.val.rule != "impOp" && obj.val.rule != "biOp" && obj.val.rule != "negOp"){
         $scope.linking = obj;
         obj.val.valid = null;
         obj.val.link = null;
@@ -609,6 +614,12 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
             break;
           case "impOp":
             obj.val.valid = implicationOperator(obj.exp);
+            break;
+          case "biOp":
+            obj.val.valid = biconditional(obj.exp);
+            break;
+          case "negOp":
+            obj.val.valid = negationOperator(obj.exp);
             break;
           default:
             obj.val.valid = null;
@@ -649,6 +660,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           break;
         case "impOp":
           obj.val.valid = implicationOperator(obj.exp);
+          break;
+        case "negOp":
+          obj.val.valid = negationOperator(obj.exp);
           break;
         default:
           obj.val.valid = null;
