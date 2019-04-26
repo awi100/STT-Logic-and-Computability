@@ -10,14 +10,38 @@ This idea was created by Bram van Heuveln for his various logic classes.
 
 The goal of this project is to have a working app that can save/load data, grade students' work, and give hints on how to make a short truth table.
 
-You may create as many statements as you like using the "Add Expression" button and delete them with the x button.
+Instructions
+  Input premises and conclusions on the Input tab
+  Go to the Table tab to solve the truth table
+  Premises will automatically be set to true and the conclusions set to false
+  Click on literals and operators to assign them a boolean value
+  Your object is now PURPLE meaning it does not have a rule assigned to it
+  Click on a rule to verify your step
+  If assigning a value to an operator, choose the rule that has the operator type followed by "Operator"
+  Your object may now be BLUE meaning you need to select an additional reason for your rule
+  If you are linking, select a new object to complete the rule verification
+  Your initial object will now be GREEN if your rule and value are correct - but RED if they are incorrect
+  To finish, click Show Contradiction and link 2 objects that contradict each other
+Formatting Rules
+  Literals must be characters from English alphabet
+  Literals must be one character
+  Literals must be separated by an operator
+  There must be the same amount of open and closed parentheses
+  You must input at least one conclusion
+  If you create an expression with multiple top-level operators, we will parse them as separated boolean operators
+Plans For the Future
+  Consistency and other goals have not been implemented
+  Export to .bram
+  Intercept keyboard event to directly type logical unicode
+  Create batch file checker for grading
+  When linking, highlight recommended / valid targets
+  You have to click once to finish loading a file (unsure if Angular vendor bug?)
 
-Once you have entered in all of your premises and your conclusion, you can click on the 'table' option and view your inputs as a short truth table. Here the premises will default to true and the conclusion will default to false and you may click on different literals and operators and assign them values. When assigning values you will be asked to give a rule as to why you can assign the value that you did and it will be checked as to whether that is a valid thing to do or not.
-
-FEATURES:
-
-Import/Export data
-
-Options of validity, consistency, and tautology
-
-Able to assign T or F to literals/operators and have it be checked if that is a valid thing to do
+Features
+  Save Work
+  Verify
+  Basic instructions for user
+  Justification use select/highlight
+  Syntax/symbols
+  Indicate Contradiction
+  Explicit Rules? And Intro, And Elim
