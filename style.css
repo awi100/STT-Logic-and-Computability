@@ -230,7 +230,10 @@ padding:2vh;
 table,li {
 font-family:arial, sans-serif;
 border-collapse:collapse;
-width:50%;
+}
+
+li, span {
+  padding: 1vh;
 }
 
 td,th {
