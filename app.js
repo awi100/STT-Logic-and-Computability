@@ -1,5 +1,5 @@
 //==============================================================================
-//= RULE VERIFICATION ==========================================================
+//= LOGIC ======================================================================
 //==============================================================================
 
 function isLiteral(express){
@@ -54,15 +54,28 @@ function andOperator(express){
 
 }
 
-function or(express){
+function or(express, expressBeingSet){
+  console.log(express);
   if (express.value == null || express.oper != '|'){
     return false;
   }
   if (express.value == true){
-    return (express.e1.value == true && express.e2.value != null) || (express.e2.value == true && express.e1.value != null) ;
+    if (expressBeingSet.value == false)
+      return false;
+    else if (express.e1.value == null || express.e2.value == null)
+      return false;
+    else if (express.e1.value == false)
+      return express.e2.value == true;
+    else if (express.e2.value == false)
+      return express.e1.value == true;  
+    else 
+      return false;
   }
   else{
-    return (express.e1.value == false && express.e2.value != true) || (express.e2.value == false && express.e1.value != true);
+    if (expressBeingSet.value == true)
+      return false;
+    else
+      return (express.e1.value == false && express.e2.value != true) || (express.e2.value == false && express.e1.value != true);
   }
 }
 
@@ -92,7 +105,7 @@ function implication(express){
       return express.e2.value == true;
     else if (express.e2.value == false)
       return express.e1.value == false;
-    else
+    else 
       return false;
   }
   else{
@@ -130,47 +143,16 @@ function biconditional(express){
     return (express.e1.value == true && express.e2.value == false) || (express.e1.value == false && express.e2.value == true);
 }
 
-function negation(express) {
-  if (express == null || express.oper == null) return false;
-  if (express.oper != '~') return negate(express.e1) || negate(express.e2);
-  if (express.value == true){
-    return express.e1 != null && express.e1.value == false;
+function negation(express){
+    if (express == null || express.oper == null) return false;
+    if (express.oper != '~') return negate(express.e1) || negate(express.e2);
+    if (express.value == true){
+      return express.e1 != null && express.e1.value == false;
+    }
+    if (express.value == false){
+      return express.e1 != null && express.e1.value == true;
+    }
   }
-  if (express.value == false){
-    return express.e1 != null && express.e1.value == true;
-  }
-}
-
-// Condtradiction checking
-function showContradiction(express1, express2) {
-  if (express1 == null || express2 == null){
-    return false;
-  }
-  var e1isLit = isLiteral(express1), e2isLit = isLiteral(express2);
-  if (!e1isLit && !e2isLit){
-    return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2) || showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
-  }
-  else if (!e1isLit){
-    return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2);
-  }
-  else if (!e2isLit){
-    return showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
-  }
-  var sameLit = express1.e1 == express2.e1;
-  if (!sameLit){
-    return false;
-  }
-  if (sameLit && express1.value != express2.value) {
-    return true;
-  }
-  else{
-    return false;
-  }
-};
-
-//==============================================================================
-//=PARSING LOGIC ===============================================================
-//==============================================================================
 
 //function to check if there are parens around the
 //expression that are serving no purpose
@@ -398,7 +380,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         nums.push(o.val.num);
       }
     });
-    // Decrease all greater vals by 1
+    //
     nums.forEach((n) => {
       $scope.expressions.forEach((e) => {
         e.objs.forEach((o) => {
@@ -409,49 +391,50 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     });
   }
 
-  // Delete input field and the expression linked to it
   $scope.deleteInput = (input, type) => {
-    // Find connected expression
     let idx = $scope.inputs.indexOf(input);
     idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
-    // Clean up step numbers if it has objects (might not if invalid input)
     if ($scope.expressions[idx].objs) cleanStepCounter($scope.expressions[idx].objs);
-    // Clean up ID numbers
-    for (let i=0; i<$scope.inputs.length; i++) {
-      if ($scope.inputs[i].id > input.id) {
-        $scope.inputs[i].id -= 1;
-        $scope.expressions[i].id -= 1;
-      }
-    }
+    $scope.inputs.forEach((i) => {
+      if (i.id > input.id) i.id -= 1;
+    });
     $scope.idCounter -= 1;
     if (type == "premise") $scope.numPremises -= 1;
-    // Remove from arrays
     $scope.inputs.splice(idx, 1);
     $scope.expressions.splice(idx, 1);
   };
 
-  // Validate input and create objects for expression
+  function combine(o1, o2) {
+    // Increment conclusion IDs to fit inside expressions
+    let temp = o2;
+    temp.forEach((e) => {
+      e.id += o1.length;
+    });
+    return o1.concat(temp);
+  }
+
   $scope.validateInput = (input, type) => {
-    // Find expression linked to input
     let idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
     input.err = validateInput(input.str);
-    // If valid, create objects
+    // If valid, add to expressions
     if (input.err == "") {
       let objs = [];
       let expression = createObject(input.str, 0, objs);
       // Remove extra parens around expressions
       if (objs.length > 2) objs = objs.slice(1, objs.length-1);
-      // Set vals for expression
-      $scope.expressions[idx].exp = expression;
-      $scope.expressions[idx].objs = objs;
-      cleanStepCounter($scope.expressions[idx].objs);
+      if (idx != -1) {
+        $scope.expressions[idx].exp = expression;
+        $scope.expressions[idx].objs = objs;
+        cleanStepCounter($scope.expressions[idx].objs);
+      } else {
+        console.error("Expression input desync: Fatal error");
+      }
     } else if (idx != -1) { // Make invis, if invalidated
       $scope.expressions[idx].exp = null;
       $scope.expressions[idx].objs = null;
     }
   };
 
-  // Get 3 option display from contradiction value
   $scope.getContraString = (val) => {
     if (val == null) {
       return "?";
@@ -460,32 +443,33 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
-  // Enable 2 value linking from selecting contradiction
+  $scope.getValString = (val) => {
+    if (val == null) {
+      return "";
+    } else {
+      return (val) ? "T" : "F";
+    }
+  };
+
   $scope.processContradiction = () => {
     $scope.contradiction.linking = true;
     $scope.linking = true;
     if ($scope.editing) $scope.editing.edit = false;
   };
 
-  // On clicking object visual rep, do both sides of linking process
   $scope.connect = (obj) => {
-    // If intangible, exit
-    if (obj.intangible && !$scope.linking) return;
+    if (obj.intangible && !$scope.linking) return; // If intangible, exit
 
-    // If we're doing 2 obj linking for contradiction
     if ($scope.contradiction.linking) {
-      // If nothing selected, set first
-      if ($scope.contradiction.count == 0) {
+      if ($scope.contradiction.count == 0){
         $scope.contradiction.e1 = obj.exp;
         $scope.contradiction.count++;
       }
-      // If 1 selected, set second
       else if ($scope.contradiction.count == 1) {
         $scope.contradiction.e2 = obj.exp;
         $scope.contradiction.count++;
       }
-      // If 2 selected, verify rule and finish linking
-      else if ($scope.contradiction.count == 2) {
+      if ($scope.contradiction.count == 2){
         $scope.contradiction.val = showContradiction($scope.contradiction.e1, $scope.contradiction.e2);
         $scope.contradiction.count = 0;
         $scope.contradiction.e1 = null;
@@ -493,29 +477,26 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         $scope.contradiction.linking = false;
         $scope.linking = false;
       }
-    }
-    // If we're doing 1 obj linking for literal rules, set target, verify, and stop linking
-    else if ($scope.linking) {
-      $scope.linking.val.link = obj;
-      $scope.verifyRule($scope.linking);
-      $scope.linking = null;
-    }
-    // If we're not linking
-    else {
-      // Switch to new obj dialogue
-      if ($scope.editing && $scope.editing != obj) {
-        $scope.editing.edit = false;
-        obj.edit = true;
-      } else { // Toggle opened obj dialogue
-        obj.edit = !obj.edit;
+    } else {
+      if ($scope.linking) {
+        $scope.linking.val.link = obj;
+        $scope.verifyRule($scope.linking);
+        $scope.linking = null;
+      } else {
+        if ($scope.editing && $scope.editing != obj) {
+          $scope.editing.edit = false;
+          obj.edit = true;
+         } else {
+          obj.edit = !obj.edit;
+        }
+        $scope.editing = obj.edit ? obj : null;
       }
-      $scope.editing = obj.edit ? obj : null;
     }
   };
 
   // Disconnect from object, if click on canvas
   $scope.disconnect = (e) => {
-    // Iterate over parent elements and if one is connectable, we aren't clicking on canvas
+    // Iterate over parent elements and if one is expressions, we aren't clicking on canvas
     let element = e.target;
     while (element != null) {
       if (element.classList.contains("connectable")) return;
@@ -523,11 +504,9 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
     // Set edit to false
     if ($scope.editing) $scope.editing.edit = false;
-    // Prevent bubble up
     e.stopPropagation();
   };
 
-  // Set visual rep of object, assign step number
   $scope.setObjVal = (obj, val) => {
     // Check to see if value is different
     if (obj.val.bool == val) return;
@@ -535,7 +514,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     obj.val.rule = "";
     obj.val.link = null;
     obj.val.valid = null;
-    // If setting to null, work steps backwards and decrement
+    // If setting to null, work steps backwards
     if (obj.val.bool != "" && !val) {
       $scope.expressions.forEach((e) => {
         e.objs.forEach((o) => {
@@ -543,7 +522,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         });
       });
       $scope.stepCounter--;
-    } else if (obj.val.bool == "" && val) { // Otherwise increment step
+    } else if (obj.val.bool == "" && val) {
       $scope.stepCounter++;
     }
     // Set to bool
@@ -569,7 +548,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     });
   };
 
-  // Set all premises to T, all conclusions to F
   $scope.initValues = () => {
     for (let i=0; i<$scope.expressions.length; i++) {
       let e = $scope.expressions[i];
@@ -586,18 +564,41 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
-  // If linking, verify rule - else set linking
+  function showContradiction(express1, express2) {
+    //TODO contradiction checking
+    if (express1 == null || express2 == null){
+      return false;
+    }
+    var e1isLit = isLiteral(express1), e2isLit = isLiteral(express2);
+    if (!e1isLit && !e2isLit){
+      return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2) || showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
+    }
+    else if (!e1isLit){
+      return showContradiction(express1.e1, express2) || showContradiction(express1.e2, express2);
+    }
+    else if (!e2isLit){
+      return showContradiction(express1, express2.e1) || showContradiction(express1, express2.e2);
+    }
+    var sameLit = express1.e1 == express2.e1;
+    if (!sameLit){
+      return false;
+    }
+    if (sameLit && express1.value != express2.value) {
+      return true;
+    }
+    else{
+      return false;
+    }
+  };
+
   $scope.verifyRule = (obj) => {
-    // If not linking
     if (!$scope.linking) {
-      // Set flags so user can select a link
-      if (obj.val.rule != "andOp" && obj.val.rule != "orOp" && obj.val.rule != "impOp") {
+      if (obj.val.rule != "andOp" && obj.val.rule != "orOp" && obj.val.rule != "impOp"){
         $scope.linking = obj;
         obj.val.valid = null;
         obj.val.link = null;
       }
-      // If using an operator rule, we do not link and immediately verify
-      else {
+      else{
         obj.exp.value = (obj.val.bool == "T");
         switch (obj.val.rule) {
           case "andOp":
@@ -613,9 +614,8 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
             obj.val.valid = null;
         }
       }
-    }
-    // If already linked, verify rule
-    else {
+
+    } else {
       if (!obj.val.link.val.valid) return false;
       // Set expression value then see if we're valid given the assumption
       obj.exp.value = (obj.val.bool == "T");
@@ -630,7 +630,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           obj.val.valid = and(obj.val.link.exp);
           break;
         case "or":
-          obj.val.valid = or(obj.val.link.exp);
+          obj.val.valid = or(obj.val.link.exp, obj.exp);
           break;
         case "imp":
           obj.val.valid = implication(obj.val.link.exp);
@@ -662,7 +662,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }
   };
 
-  // Export scope values as .stt file to disk
   $scope.export = () => {
     let filename = "save.stt";
     let save = {
@@ -677,9 +676,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       task: $scope.task,
       contradiction: $scope.contradiction
     }
-    // Create UTF8 blob given our object in JSON form
     let blob = new Blob([angular.toJson(save, true)], {type: "text/plain;charset=utf-8"});
-    // Open save dialogue
     if (window.navigator && window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(blob, filename);
     } else {
