@@ -43,7 +43,8 @@ function and(express){
 }
 
 function andOperator(express){
-  if (express.value == null || express.oper != '&')
+  console.log(express);
+  if (express.oper != '&')
     return false;
   if (express.value == true){
     return express.e1.value == true && express.e2.value == true;
@@ -66,7 +67,7 @@ function or(express){
 }
 
 function orOperator(express){
-  if (express.value == null || express.oper != '|'){
+  if (express.oper != '|'){
     return false;
   }
   if (express.value == true){
@@ -78,26 +79,46 @@ function orOperator(express){
 }
 
 function implication(express){
+  //console.log(express);
   if (express.value == null || express.oper != '$')
     return false;
   if (express.value == true){
     //for a true implication
     //if antecedent is true, consequence must be true
     //else antecedent is false, whole expression is true
-    if (express.e1.value == true)
+    if (express.e1.value == false)
+      return express.e2.value != null;
+    else if (express.e1.value == true)
       return express.e2.value == true;
-    else
-      return true;
+    else if (express.e2.value == false)
+      return express.e1.value == false;
+    else 
+      return false;
   }
   else{
+    //console.log(express);
     //for a false implication
     //if antecedent is true, consequence must be false
     //else antecedent is false, whole expression is false
+    if (express.e1.value == false)
+      return false;
     if (express.e1.value == true)
       return express.e2.value == false;
+    else if (express.e2.value == false)
+      return express.e1.value == true;
     else
-      return false;
+      return true;
   }
+}
+
+function implicationOperator(express){
+    if (express.oper != '$')
+      return false;
+    if (express.value == true){
+      return express.e1.value == false || (express.e1.value == true && express.e2.value == true);
+    }
+    else
+      return express.e1.value != false && !(express.e1.value == true && express.e2.value == true);
 }
 
 function biconditional(express){
@@ -559,9 +580,28 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
 
   $scope.verifyRule = (obj) => {
     if (!$scope.linking) {
-      $scope.linking = obj;
-      obj.val.valid = null;
-      obj.val.link = null;
+      if (obj.val.rule != "andOp" && obj.val.rule != "orOp" && obj.val.rule != "impOp"){
+        $scope.linking = obj;
+        obj.val.valid = null;
+        obj.val.link = null;
+      }
+      else{
+        obj.exp.value = (obj.val.bool == "T");
+        switch (obj.val.rule) {
+          case "andOp":
+            obj.val.valid = andOperator(obj.exp);
+            break;
+          case "orOp":
+            obj.val.valid = orOperator(obj.exp);
+            break;
+          case "impOp":
+            obj.val.valid = implicationOperator(obj.exp);
+            break;
+          default:
+            obj.val.valid = null;
+        }
+      }
+
     } else {
       if (!obj.val.link.val.valid) return false;
       // Set expression value then see if we're valid given the assumption
@@ -589,10 +629,13 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
           obj.val.valid = negation(obj.val.link.exp);
           break;
         case "andOp":
-          obj.val.valid = andOperator(obj.val.link.exp);
+          obj.val.valid = andOperator(obj.exp);
           break;
         case "orOp":
-          obj.val.valid = orOperator(obj.val.link.exp);
+          obj.val.valid = orOperator(obj.exp);
+          break;
+        case "impOp":
+          obj.val.valid = implicationOperator(obj.exp);
           break;
         default:
           obj.val.valid = null;
