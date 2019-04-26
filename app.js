@@ -1,5 +1,5 @@
 //==============================================================================
-//= LOGIC ======================================================================
+//= RULE CHECKING LOGIC ========================================================
 //==============================================================================
 
 function isLiteral(express){
@@ -67,8 +67,8 @@ function or(express, expressBeingSet){
     else if (express.e1.value == false)
       return express.e2.value == true;
     else if (express.e2.value == false)
-      return express.e1.value == true;  
-    else 
+      return express.e1.value == true;
+    else
       return false;
   }
   else{
@@ -105,7 +105,7 @@ function implication(express){
       return express.e2.value == true;
     else if (express.e2.value == false)
       return express.e1.value == false;
-    else 
+    else
       return false;
   }
   else{
