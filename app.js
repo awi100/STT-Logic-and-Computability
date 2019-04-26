@@ -283,6 +283,7 @@ function createObject(text, counter, objs) {
 //= INTERFACE ==================================================================
 //==============================================================================
 
+// Used to convert latin keyboard to logical symbols, using fitch mapping
 const inputMap = {
   "^": "\u22a5",
   "~": "\u00ac",
@@ -291,13 +292,6 @@ const inputMap = {
   "$": "\u2192",
   "%": "\u2194"
 };
-
-var modified = false;
-function verifyChange() {
-  if (modified) {
-    alert("Changing inputs will erase all progress");
-  }
-}
 
 var app = angular.module("shortTruthTables", []);
 
@@ -310,10 +304,10 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
   $scope.expressions = [{id: 0, objs: null, exp: null}, {id: 1, objs: null, exp: null}];
   $scope.stepCounter = 0;
   $scope.file = {data: null};
-  $scope.modified = false;
   $scope.task = "Validity";
   $scope.contradiction = { e1: null, e2: null, count: 0, linking: false, val: null };
 
+  // Create a new input field and make a new expression object, connected to it
   $scope.addInput = (type) => {
     // If conclusion, push to end
     let idx = $scope.inputs.length;
@@ -322,24 +316,28 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       idx = $scope.numPremises;
       $scope.numPremises++;
     }
+    // Insert new input and expression
     $scope.inputs.splice(idx, 0, {id: null, str: "", err: ""});
     $scope.expressions.splice(idx, 0, {id: null, objs: null, exp: null});
-    // Set numerical IDs
+    // Set numerical IDs in order, keep track of one we just inserted
     let id;
     for (let i=0; i<$scope.inputs.length; i++) {
       if ($scope.inputs[i].id == null) id = i;
       $scope.inputs[i].id = i;
       $scope.expressions[i].id = i;
     }
+    // Wait for DOM to update, then focus our new element
     $timeout(() => {
       document.getElementById("input-" + id).focus();
     });
   };
 
+  // Keyboard shortcut to make enter submit new input
   $scope.enterInput = (e, type) => {
-    if (e.key === "Enter") $scope.addInput(type); // On enter, submit input
+    if (e.key === "Enter") $scope.addInput(type);
   };
 
+  // When steps are removed, ensure that all other numerals update
   function cleanStepCounter(objs) {
     // Turn back step counter for each counted in old exp
     let nums = [];
@@ -348,6 +346,7 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         nums.push(o.val.num);
       }
     });
+    //
     nums.forEach((n) => {
       $scope.expressions.forEach((e) => {
         e.objs.forEach((o) => {
@@ -565,6 +564,8 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       obj.val.link = null;
     } else {
       if (!obj.val.link.val.valid) return false;
+      // Set expression value then see if we're valid given the assumption
+      obj.exp.value = (obj.val.bool == "T");
       switch (obj.val.rule) {
         case "":
           obj.val.valid = null;
@@ -596,8 +597,11 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
         default:
           obj.val.valid = null;
       }
+      // If valid, update expression value else reset back to null
       if (obj.val.valid) {
         obj.exp.value = (obj.val.bool == "T");
+      } else {
+        obj.exp.value = null;
       }
     }
   };
@@ -613,7 +617,6 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
       expressions: $scope.expressions,
       stepCounter: $scope.stepCounter,
       file: $scope.file,
-      modified: $scope.modified,
       task: $scope.task,
       contradiction: $scope.contradiction
     }
@@ -640,9 +643,12 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     }).join(''));
   }
 
+  // Individually load each json piece into $scope
   $scope.import = () => {
     $scope.importStatus = "Loading... ";
+    // Do not read heading, as it will mess up json
     let header = $scope.file.data.indexOf(";base64,");
+    // Pass heading, load unicode text as JSON
     let json = JSON.parse(b64DecodeUnicode($scope.file.data.substring(header+8)));
     $scope.editing = json.editing;
     $scope.linking = json.linking;
@@ -652,22 +658,24 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     $scope.expressions = json.expressions;
     $scope.stepCounter = json.stepCounter;
     $scope.file = json.file;
-    $scope.modified = json.modified;
     $scope.task = json.task;
     $scope.contradiction = json.contradiction;
     $scope.importStatus = "";
   };
 
+  // On error, set status
   $scope.importError = (e) => {
     $scope.importStatus = e;
   };
 
+  // As file progresses, set status to show percentage
   $scope.importProgress = (t, l) => {
     $scope.importStatus = "Loading... " + l + "/" + t;
   }
 }]);
 
 // Derivative of: https://stackoverflow.com/questions/18839048/how-to-read-a-file-in-angularjs
+// Allows us to load a file from disk, into the app
 app.directive("fileSelect", ["$window", function ($window) {
   return {
     restrict: "A",
@@ -675,20 +683,22 @@ app.directive("fileSelect", ["$window", function ($window) {
     link: function (scope, el, attr, ctrl) {
       let fileReader = new $window.FileReader();
 
+      // Run function when file is totally loaded
       fileReader.onload = function () {
         ctrl.$setViewValue(fileReader.result);
-
         if ("fileLoaded" in attr) {
           scope.$eval(attr["fileLoaded"]);
         }
       };
 
+      // Run function when file is partially loaded
       fileReader.onprogress = function (event) {
         if ("fileProgress" in attr) {
           scope.$eval(attr["fileProgress"], {"$total": event.total, "$loaded": event.loaded});
         }
       };
 
+      // Run function if something goes wrong
       fileReader.onerror = function () {
         if ("fileError" in attr) {
           scope.$eval(attr["fileError"], {"$error": fileReader.error});
@@ -697,8 +707,10 @@ app.directive("fileSelect", ["$window", function ($window) {
 
       let fileType = attr["fileSelect"];
 
+      // Run function when file is selected
       el.bind("change", function (e) {
         let fileName = e.target.files[0];
+        // Read all types as utf8, even if not .stt format
         if (fileType === "stt") {
           fileReader.readAsText(fileName, "utf-8");
         } else if (fileType === "data") {
@@ -708,9 +720,3 @@ app.directive("fileSelect", ["$window", function ($window) {
     }
   };
 }]);
-
-app.filter('reverse', function() {
-  return function(items) {
-    return items.slice().reverse();
-  };
-});
