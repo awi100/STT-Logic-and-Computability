@@ -49,7 +49,6 @@
             ng-keypress="enterInput($event, 'premise')"
             ng-change="validateInput(input, 'premise')"
             ng-class="{'invalid': input.err}"
-            onfocus="verifyChange()"
           />
           <div class="btn input" ng-click="deleteInput(input, 'premise')">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>
@@ -67,7 +66,6 @@
             ng-keypress="enterInput($event, 'conclusion')"
             ng-change="validateInput(input, 'conclusion')"
             ng-class="{'invalid': input.err}"
-            onfocus="verifyChange()"
           />
           <div class="btn input" ng-click="deleteInput(input, 'conclusion')">✖</div>
           <p class="err input" ng-if="input.err">{{input.err}}</p>

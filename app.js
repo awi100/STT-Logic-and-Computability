@@ -416,10 +416,13 @@ app.controller("MainCtrl", ["$scope","$timeout", function($scope, $timeout) {
     idx = $scope.expressions.map(function(exp) { return exp.id; }).indexOf(input.id);
     // Clean up step numbers if it has objects (might not if invalid input)
     if ($scope.expressions[idx].objs) cleanStepCounter($scope.expressions[idx].objs);
-    // Clean up ID numbers and premise count
-    $scope.inputs.forEach((i) => {
-      if (i.id > input.id) i.id -= 1;
-    });
+    // Clean up ID numbers
+    for (let i=0; i<$scope.inputs.length; i++) {
+      if ($scope.inputs[i].id > input.id) {
+        $scope.inputs[i].id -= 1;
+        $scope.expressions[i].id -= 1;
+      }
+    }
     $scope.idCounter -= 1;
     if (type == "premise") $scope.numPremises -= 1;
     // Remove from arrays
