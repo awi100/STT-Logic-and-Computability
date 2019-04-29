@@ -61,17 +61,4 @@ The goal of this project is to have a working app that can save/load data, grade
 
   You have to click once to finish loading a file (unsure if Angular vendor bug?)
 
-## Features
-  Save Work
-
-  Verify
-
-  Basic instructions for user
-
-  Justification use select/highlight
-
-  Syntax/symbols
-
-  Indicate Contradiction
-
-  Explicit Rules? And Intro, And Elim
+  Saves can sometimes corrupt and the rules will break (this is the error we saw in the demo)
